@@ -2,7 +2,7 @@
     "private":  true,
     "name":  "trustlayer",
     "engines":  {
-                    "node":  "20.x"
+                    "node":  "26.x"
                 },
     "scripts":  {
                     "test":  "npm --prefix apps/web run test",
