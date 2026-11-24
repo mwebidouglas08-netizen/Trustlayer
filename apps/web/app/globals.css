@@ -7,13 +7,13 @@
 }
 
 body {
-  @apply bg-[#f4f7fb] text-slate-900 antialiased;
+  @apply bg-slate-50 text-ink-900 antialiased;
 }
 
 .trust-container {
-  @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
 }
 
-.glass-panel {
-  @apply rounded-2xl border border-white/60 bg-white/80 shadow-[0_20px_60px_-24px_rgba(15,23,42,0.25)] backdrop-blur;
+.skip-link {
+  @apply sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-ink-900 focus:shadow-lg focus:ring-2 focus:ring-trust-600;
 }
