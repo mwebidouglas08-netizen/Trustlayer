@@ -1,6 +1,7 @@
 ﻿{
   "private": true,
   "name": "trustlayer",
+  "engines": { "node": "20.x" },
   "scripts": {
     "build": "npm --prefix apps/web install --no-audit --no-fund && npm --prefix apps/web run build",
     "dev": "npm --prefix apps/web run dev",
