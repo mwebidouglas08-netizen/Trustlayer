@@ -1,1 +1,9 @@
-﻿export default function StaffCaseDetail({ params }: { params: { id: string } }) { return <div className="trust-container py-10"><h1 className="text-2xl font-semibold">Case {params.id}</h1></div>; }
+import { redirect } from "next/navigation";
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  redirect(`/app/transactions/${encodeURIComponent(id)}`);
+}

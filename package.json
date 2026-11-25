@@ -1,14 +1,44 @@
 {
-    "private":  true,
-    "name":  "trustlayer",
-    "engines":  {
-                    "node":  "26.x"
-                },
-    "scripts":  {
-                    "test":  "npm --prefix apps/web run test",
-                    "typecheck":  "npm --prefix apps/web run typecheck",
-                    "build":  "npm --prefix apps/web install --no-audit --no-fund \u0026\u0026 npm --prefix apps/web run build",
-                    "dev":  "npm --prefix apps/web run dev",
-                    "lint":  "npm --prefix apps/web run lint"
-                }
+  "name": "trustlayer",
+  "private": true,
+  "workspaces": [
+    "apps/web"
+  ],
+  "engines": {
+    "node": ">=22.14 <23"
+  },
+  "packageManager": "npm@10.9.8",
+  "scripts": {
+    "dev": "npm run dev -w apps/web -- --hostname 0.0.0.0",
+    "build": "npm run build -w apps/web",
+    "start": "npm run start -w apps/web -- --hostname 0.0.0.0",
+    "test": "npm run test -w apps/web",
+    "typecheck": "npm run typecheck -w apps/web",
+    "lint": "npm run lint -w apps/web",
+    "check": "npm run lint && npm run typecheck && npm test && npm run build",
+    "test:e2e": "playwright test",
+    "test:e2e:sandbox": "node scripts/browser-tests.mjs",
+    "test:contract:types": "tsc --noEmit -p programs/trustlayer_escrow/tsconfig.json",
+    "format": "prettier --write apps/web/app apps/web/components apps/web/lib apps/web/tests tests scripts docs programs/trustlayer_escrow/tests *.md *.json *.ts .github/workflows/*.yml",
+    "format:check": "prettier --check apps/web/app apps/web/components apps/web/lib apps/web/tests tests scripts docs programs/trustlayer_escrow/tests *.md *.json *.ts .github/workflows/*.yml"
+  },
+  "devDependencies": {
+    "@coral-xyz/anchor": "0.30.1",
+    "@playwright/test": "1.58.2",
+    "@solana/spl-token": "0.4.15",
+    "@sparticuz/chromium": "143.0.4",
+    "@types/chai": "4.3.20",
+    "@types/mocha": "10.0.10",
+    "chai": "4.5.0",
+    "mocha": "11.7.5",
+    "prettier": "3.8.1",
+    "ts-mocha": "11.1.0",
+    "typescript": "5.9.3",
+    "ts-node": "10.9.2",
+    "wait-on": "8.0.5"
+  },
+  "overrides": {
+    "@solana/web3.js": "1.98.4",
+    "postcss": "8.5.33"
+  }
 }

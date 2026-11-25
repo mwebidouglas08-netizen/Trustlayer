@@ -1,14 +1,27 @@
-﻿export default function HowItWorksPage() {
-  return (
-    <div className="trust-container py-12 max-w-3xl">
-      <h1 className="text-3xl font-semibold text-ink-900">How TRUSTLAYER works</h1>
-      <p className="mt-4 text-slate-600">TRUSTLAYER is a transaction-protection layer, not a marketplace.</p>
-      <ol className="mt-8 space-y-6 list-decimal list-inside text-slate-700">
-        <li><strong>Agree:</strong> buyer and seller confirm terms, amount (USDC), deadlines, and acceptance criteria. Both accept the same agreement version.</li>
-        <li><strong>Secure:</strong> buyer funds a non-custodial Solana escrow vault controlled by the on-chain program. Seller cannot withdraw funds directly.</li>
-        <li><strong>Complete:</strong> buyer reviews evidence and releases funds on-chain, or opens a dispute under the published policy for human review and authorized settlement.</li>
-      </ol>
-      <p className="mt-8 text-sm text-slate-600">Blockchain records the transaction; it does not prove a physical item was delivered. Evidence and disputes remain off-chain and policy-driven.</p>
-    </div>
-  );
+import { InfoPage } from "@/components/InfoPage";
+const content = {
+  title: "A clearer agreement. A safer payment.",
+  intro:
+    "Trustlayer is a wallet-first escrow tool, not a marketplace or a guarantee of delivery.",
+  sections: [
+    {
+      title: "01 · Agree",
+      text: "The buyer records the seller, amount, deadline, and a hash of the terms. Download the exact agreement JSON and obtain seller consent separately before funding. Import the file to verify its on-chain hash.",
+    },
+    {
+      title: "02 · Secure",
+      text: "Sign the USDC deposit from your associated token account. The funds are held by a program-controlled vault. Both parties can inspect the escrow in the app and on Solana Explorer.",
+    },
+    {
+      title: "03 · Complete",
+      text: "After satisfactory delivery, the buyer releases payment. A buyer can open a dispute while funded; a seller can escalate after the deadline. The configured arbitrator can refund the buyer or pay the seller. There are no automatic refunds.",
+    },
+    {
+      title: "Use test tokens only",
+      text: "A deployed and initialized program, matching published IDL, test SOL and the configured six-decimal token are required. The unconfigured workspace is a preview; it never invents balances or confirmations.",
+    },
+  ],
+};
+export default function Page() {
+  return <InfoPage {...content} />;
 }

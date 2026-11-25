@@ -1,9 +1,9 @@
-﻿use anchor_lang::prelude::*;
+use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, TransferChecked};
 
 declare_id!("TRusT11111111111111111111111111111111111111");
 
-/// Maximum fee in basis points (1% = 100 bps). Enforced in config init/update flows by app policy; program stores and validates <= MAX_FEE_BPS.
+/// Maximum platform fee: 1%. Existing escrows snapshot their fee.
 pub const MAX_FEE_BPS: u16 = 100;
 
 #[program]
@@ -18,6 +18,9 @@ pub mod trustlayer_escrow {
         arbitration_authority: Pubkey,
     ) -> Result<()> {
         require!(fee_bps <= MAX_FEE_BPS, EscrowError::FeeTooHigh);
+        require_keys_eq!(usdc_mint, ctx.accounts.mint.key(), EscrowError::InvalidMint);
+        require!(ctx.accounts.mint.decimals == 6, EscrowError::InvalidMint);
+        require!(fee_recipient != Pubkey::default() && arbitration_authority != Pubkey::default(), EscrowError::Unauthorized);
         let cfg = &mut ctx.accounts.config;
         cfg.authority = ctx.accounts.authority.key();
         cfg.usdc_mint = usdc_mint;
@@ -26,6 +29,19 @@ pub mod trustlayer_escrow {
         cfg.arbitration_authority = arbitration_authority;
         cfg.paused = false;
         cfg.bump = ctx.bumps.config;
+        Ok(())
+    }
+
+    pub fn set_paused(ctx: Context<ManageConfig>, paused: bool) -> Result<()> {
+        ctx.accounts.config.paused = paused;
+        Ok(())
+    }
+
+    /// Authority transfer requires the new authority's signature to avoid accidental lockout.
+    pub fn rotate_authorities(ctx: Context<RotateAuthorities>, arbitration_authority: Pubkey) -> Result<()> {
+        require!(arbitration_authority != Pubkey::default(), EscrowError::Unauthorized);
+        ctx.accounts.config.authority = ctx.accounts.new_authority.key();
+        ctx.accounts.config.arbitration_authority = arbitration_authority;
         Ok(())
     }
 
@@ -39,7 +55,7 @@ pub mod trustlayer_escrow {
     ) -> Result<()> {
         require!(!ctx.accounts.config.paused, EscrowError::Paused);
         require!(amount > 0, EscrowError::InvalidAmount);
-        require!(seller != ctx.accounts.buyer.key(), EscrowError::BuyerSellerSame);
+        require!(seller != ctx.accounts.buyer.key() && seller != Pubkey::default(), EscrowError::BuyerSellerSame);
         require!(ctx.accounts.usdc_mint.key() == ctx.accounts.config.usdc_mint, EscrowError::InvalidMint);
         require!(deadline_unix > Clock::get()?.unix_timestamp, EscrowError::InvalidDeadline);
 
@@ -63,6 +79,8 @@ pub mod trustlayer_escrow {
     }
 
     pub fn fund_escrow(ctx: Context<FundEscrow>) -> Result<()> {
+        require!(!ctx.accounts.config.paused, EscrowError::Paused);
+        require!(Clock::get()?.unix_timestamp < ctx.accounts.escrow.deadline_unix, EscrowError::InvalidDeadline);
         let escrow = &ctx.accounts.escrow;
         require!(escrow.state == EscrowState::Created as u8, EscrowError::InvalidState);
         require!(ctx.accounts.buyer.key() == escrow.buyer, EscrowError::Unauthorized);
@@ -107,8 +125,7 @@ pub mod trustlayer_escrow {
         require!(ctx.accounts.buyer.key() == escrow.buyer, EscrowError::Unauthorized);
 
         let amount = escrow.amount;
-        let fee_bps = escrow.fee_bps as u64;
-        let fee = amount.checked_mul(fee_bps).and_then(|v| v.checked_div(10_000)).unwrap_or(0);
+        let fee = calculate_fee(amount, escrow.fee_bps)?;
         let seller_amount = amount.checked_sub(fee).ok_or(EscrowError::MathOverflow)?;
 
         let escrow_key = escrow.key();
@@ -157,7 +174,11 @@ pub mod trustlayer_escrow {
             escrow.state == EscrowState::Funded as u8 || escrow.state == EscrowState::DeliverySubmitted as u8,
             EscrowError::InvalidState
         );
-        require!(ctx.accounts.buyer.key() == escrow.buyer, EscrowError::Unauthorized);
+        require!(
+            ctx.accounts.participant.key() == escrow.buyer ||
+            (ctx.accounts.participant.key() == escrow.seller && Clock::get()?.unix_timestamp >= escrow.deadline_unix),
+            EscrowError::Unauthorized
+        );
         escrow.state = EscrowState::Disputed as u8;
         escrow.disputed_at_unix = Clock::get()?.unix_timestamp;
         Ok(())
@@ -206,8 +227,7 @@ pub mod trustlayer_escrow {
         );
 
         let amount = escrow.amount;
-        let fee_bps = escrow.fee_bps as u64;
-        let fee = amount.checked_mul(fee_bps).and_then(|v| v.checked_div(10_000)).unwrap_or(0);
+        let fee = calculate_fee(amount, escrow.fee_bps)?;
         let seller_amount = amount.checked_sub(fee).ok_or(EscrowError::MathOverflow)?;
 
         let escrow_key = escrow.key();
@@ -264,7 +284,27 @@ pub mod trustlayer_escrow {
 }
 
 #[derive(Accounts)]
+pub struct ManageConfig<'info> {
+    #[account(mut, seeds = [b"config"], bump = config.bump, has_one = authority @ EscrowError::Unauthorized)]
+    pub config: Account<'info, Config>,
+    pub authority: Signer<'info>,
+}
+
+#[derive(Accounts)]
+pub struct RotateAuthorities<'info> {
+    #[account(mut, seeds = [b"config"], bump = config.bump, has_one = authority @ EscrowError::Unauthorized)]
+    pub config: Account<'info, Config>,
+    pub authority: Signer<'info>,
+    pub new_authority: Signer<'info>,
+}
+
+#[derive(Accounts)]
 pub struct InitializeConfig<'info> {
+    #[account(constraint = program.programdata_address()? == Some(program_data.key()) @ EscrowError::Unauthorized)]
+    pub program: Program<'info, crate::program::TrustlayerEscrow>,
+    #[account(constraint = program_data.upgrade_authority_address == Some(authority.key()) @ EscrowError::Unauthorized)]
+    pub program_data: Account<'info, ProgramData>,
+    pub mint: Account<'info, Mint>,
     #[account(
         init,
         payer = authority,
@@ -328,12 +368,13 @@ pub struct FundEscrow<'info> {
     )]
     pub escrow: Account<'info, Escrow>,
 
-    #[account(mut)]
+    #[account(mut, address = escrow.vault @ EscrowError::InvalidVault, token::mint = usdc_mint, constraint = vault.owner == Pubkey::find_program_address(&[b"vault_authority", escrow.key().as_ref()], &crate::ID).0 @ EscrowError::InvalidVault)]
     pub vault: Account<'info, TokenAccount>,
 
-    #[account(mut)]
+    #[account(mut, token::mint = usdc_mint, constraint = buyer_token_account.owner == escrow.buyer @ EscrowError::Unauthorized)]
     pub buyer_token_account: Account<'info, TokenAccount>,
 
+    #[account(address = escrow.mint @ EscrowError::InvalidMint)]
     pub usdc_mint: Account<'info, Mint>,
     pub buyer: Signer<'info>,
     pub token_program: Program<'info, Token>,
@@ -369,15 +410,16 @@ pub struct ReleaseToSeller<'info> {
     )]
     pub vault_authority: UncheckedAccount<'info>,
 
-    #[account(mut)]
+    #[account(mut, address = escrow.vault @ EscrowError::InvalidVault, token::mint = usdc_mint, constraint = vault.owner == Pubkey::find_program_address(&[b"vault_authority", escrow.key().as_ref()], &crate::ID).0 @ EscrowError::InvalidVault)]
     pub vault: Account<'info, TokenAccount>,
 
+    #[account(address = escrow.mint @ EscrowError::InvalidMint)]
     pub usdc_mint: Account<'info, Mint>,
 
-    #[account(mut)]
+    #[account(mut, token::mint = usdc_mint, constraint = seller_token_account.owner == escrow.seller @ EscrowError::Unauthorized)]
     pub seller_token_account: Account<'info, TokenAccount>,
 
-    #[account(mut)]
+    #[account(mut, token::mint = usdc_mint, constraint = fee_token_account.owner == escrow.fee_recipient @ EscrowError::Unauthorized)]
     pub fee_token_account: Account<'info, TokenAccount>,
 
     pub buyer: Signer<'info>,
@@ -392,7 +434,7 @@ pub struct OpenDispute<'info> {
         bump = escrow.bump
     )]
     pub escrow: Account<'info, Escrow>,
-    pub buyer: Signer<'info>,
+    pub participant: Signer<'info>,
 }
 
 #[derive(Accounts)]
@@ -414,12 +456,13 @@ pub struct ResolveDispute<'info> {
     )]
     pub vault_authority: UncheckedAccount<'info>,
 
-    #[account(mut)]
+    #[account(mut, address = escrow.vault @ EscrowError::InvalidVault, token::mint = usdc_mint, constraint = vault.owner == Pubkey::find_program_address(&[b"vault_authority", escrow.key().as_ref()], &crate::ID).0 @ EscrowError::InvalidVault)]
     pub vault: Account<'info, TokenAccount>,
 
+    #[account(address = escrow.mint @ EscrowError::InvalidMint)]
     pub usdc_mint: Account<'info, Mint>,
 
-    #[account(mut)]
+    #[account(mut, token::mint = usdc_mint, constraint = buyer_token_account.owner == escrow.buyer @ EscrowError::Unauthorized)]
     pub buyer_token_account: Account<'info, TokenAccount>,
 
     pub arbitration_authority: Signer<'info>,
@@ -445,15 +488,16 @@ pub struct ResolveDisputePaySeller<'info> {
     )]
     pub vault_authority: UncheckedAccount<'info>,
 
-    #[account(mut)]
+    #[account(mut, address = escrow.vault @ EscrowError::InvalidVault, token::mint = usdc_mint, constraint = vault.owner == Pubkey::find_program_address(&[b"vault_authority", escrow.key().as_ref()], &crate::ID).0 @ EscrowError::InvalidVault)]
     pub vault: Account<'info, TokenAccount>,
 
+    #[account(address = escrow.mint @ EscrowError::InvalidMint)]
     pub usdc_mint: Account<'info, Mint>,
 
-    #[account(mut)]
+    #[account(mut, token::mint = usdc_mint, constraint = seller_token_account.owner == escrow.seller @ EscrowError::Unauthorized)]
     pub seller_token_account: Account<'info, TokenAccount>,
 
-    #[account(mut)]
+    #[account(mut, token::mint = usdc_mint, constraint = fee_token_account.owner == escrow.fee_recipient @ EscrowError::Unauthorized)]
     pub fee_token_account: Account<'info, TokenAccount>,
 
     pub arbitration_authority: Signer<'info>,
@@ -475,6 +519,7 @@ pub struct CancelUnfunded<'info> {
 #[derive(InitSpace)]
 pub struct Config {
     pub authority: Pubkey,
+    #[account(address = escrow.mint @ EscrowError::InvalidMint)]
     pub usdc_mint: Pubkey,
     pub fee_bps: u16,
     pub fee_recipient: Pubkey,
@@ -541,4 +586,24 @@ pub enum EscrowError {
     MathOverflow,
     #[msg("Invalid vault")]
     InvalidVault,
+}
+
+/// Wide intermediates prevent overflow silently turning an agreed fee into zero.
+pub fn calculate_fee(amount: u64, fee_bps: u16) -> Result<u64> {
+    require!(fee_bps <= MAX_FEE_BPS, EscrowError::FeeTooHigh);
+    u64::try_from((amount as u128) * (fee_bps as u128) / 10_000)
+        .map_err(|_| error!(EscrowError::MathOverflow))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn fees_are_exact_and_bounded() {
+        assert_eq!(calculate_fee(1_000_000, 100).unwrap(), 10_000);
+        assert_eq!(calculate_fee(u64::MAX, 100).unwrap(), u64::MAX / 100);
+        assert_eq!(calculate_fee(u64::MAX, 0).unwrap(), 0);
+        assert_eq!(calculate_fee(99, 100).unwrap(), 0);
+        assert!(calculate_fee(100, 101).is_err());
+    }
 }

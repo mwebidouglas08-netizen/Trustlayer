@@ -1,9 +1,27 @@
-﻿export default function TermsPage() {
-  return (
-    <div className="trust-container py-12 max-w-3xl prose prose-slate">
-      <h1 className="text-3xl font-semibold text-ink-900">Terms of Service (draft)</h1>
-      <p className="text-sm text-slate-600">Draft — requires review by qualified counsel before public production launch.</p>
-      <p className="mt-4 text-slate-700 text-sm">By using TRUSTLAYER you agree to use the service lawfully, understand blockchain risks, and accept that escrow settlement is executed by smart contracts you authorize.</p>
-    </div>
-  );
+import { InfoPage } from "@/components/InfoPage";
+const content = {
+  title: "Terms — test-network draft.",
+  intro:
+    "These draft materials require qualified legal review before a production offering.",
+  sections: [
+    {
+      title: "Permitted use",
+      text: "Use this unaudited development release with test tokens only. Do not treat it as insurance, financial advice, a marketplace, or a guarantee that a counterparty will perform.",
+    },
+    {
+      title: "Your responsibility",
+      text: "Review agreement terms, independently confirm wallet addresses, and inspect every transaction before signing. Retain downloaded agreement files. Wallet connection does not establish seller consent or create a verified website account.",
+    },
+    {
+      title: "Settlement and limits",
+      text: "The configured program governs token movement; disputes rely on the current arbitrator. No staffed arbitration SLA, appeals process, automatic refund or support guarantee is provided by this release.",
+    },
+    {
+      title: "Production requirements",
+      text: "A deployment operator must supply legally reviewed terms, privacy disclosures, contact channels and operational safeguards before accepting real-value usage. Mainnet payments are disabled in this code.",
+    },
+  ],
+};
+export default function Page() {
+  return <InfoPage {...content} />;
 }

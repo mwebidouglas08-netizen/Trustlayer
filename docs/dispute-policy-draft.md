@@ -1,8 +1,7 @@
-﻿# Dispute policy (draft)
+# Dispute policy — test-network draft
 
-- **Scope:** Goods and service transactions funded in TRUSTLAYER escrow (USDC on Solana), subject to on-chain and off-chain workflow defined by the app.
-- **Process:** Buyer opens dispute with reason and evidence. Seller responds. Authorized arbitrator reviews evidence submitted through the platform and issues a decision executed via on-chain resolution instructions (no DB-only fund movement).
-- **Outcomes (MVP intent):** Full refund to buyer, or full payment to seller (less disclosed fee) if supported by contract; splits only if implemented, tested, and disclosed.
-- **Limits:** Not a court judgment. Physical condition/delivery facts depend on evidence. AI summaries are assistive only.
-- **Appeals:** Document escalation path before production launch (operator-defined). 
-Draft — legal counsel review required.
+A buyer may open a dispute on a funded or delivery-submitted escrow. A seller may do so after its delivery deadline. Opening a dispute prevents ordinary buyer release. The current configuration's arbitration signer may refund the full amount to the recorded buyer or pay the recorded seller less the escrow's snapshotted fee. Split settlements and appeals are not implemented.
+
+Evidence exchange and review occur outside this app; it does not provide private evidence hosting, a staffed case queue, or an arbitration SLA. Establish a trusted review channel and agree to its policy before funding. Authority rotation can change the arbitrator for existing cases. Deadlines do not automatically move money, and an unavailable arbitrator can leave a dispute unresolved.
+
+No on-chain claim proves physical delivery. No AI makes decisions or moves funds. This is not a court process, insurance policy, or guarantee of performance. Qualified legal review and an operational dispute service are required before any real-value release.

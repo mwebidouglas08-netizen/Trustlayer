@@ -1,6 +1,7 @@
-﻿# Incident response (draft)
+# Incident response
 
-- **Pause:** Use on-chain pause (when implemented) to stop new escrows if needed; existing funded escrows require careful handling (do not trap funds).
-- **Key compromise:** Rotate authorities via secure multisig procedures; revoke API keys; rotate Supabase/service credentials.
-- **Reconciliation mismatch:** Freeze affected flows in UI (read-only), investigate chain vs DB, do not manually “fix” funds off-chain.
-- **Comms:** Notify users via in-app/email using approved templates; do not leak secrets.
+1. **Contain new exposure:** Management calls `set_paused(true)` through the operator console or trusted tooling. The program blocks both creation and funding. Release, cancellation, dispute and resolution remain available. Verify the config account on-chain; disabling a UI button is not containment.
+2. **Signer compromise:** Current management and a new management signer can call `rotate_authorities(new_arbitrator)`. Both management signatures are required. A compromised current management signer remains a governance risk until rotation succeeds; if that key is lost, program upgrade governance may be required. Protect upgrade authority separately and document multisig procedures. Rotation affects existing disputes.
+3. **RPC compromise/outage:** Stop signing, switch the server-side provider, verify genesis and account results through an independent provider. Inspect submitted signatures before resubmitting. Never announce success based on a client toast or edit a DB mirror to pretend settlement occurred.
+4. **Evidence and communications:** This release has no evidence service or email system. Use the operator's separately agreed secure contact channel. Publish confirmed network, affected program addresses and user guidance without secrets or personal evidence.
+5. **Recover:** Exercise the devnet regression suite, verify account/vault conservation and authorization, review independent findings, and document a decision before resuming deposits. Keep an incident record outside session-local browser activity.
