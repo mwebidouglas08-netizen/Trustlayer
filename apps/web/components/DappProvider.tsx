@@ -60,6 +60,8 @@ export function DappProvider({ children }: { children: ReactNode }) {
   const [notices, setNotices] = useState<Notice[]>([]);
   const generation = useRef(0);
   const lock = useRef(false);
+  const connecting = useRef(false);
+  const connectionAttempt = useRef(0);
   const issue = deploymentIssue();
   const notify = useCallback(
     (message: string, signature?: string) =>
@@ -114,14 +116,30 @@ export function DappProvider({ children }: { children: ReactNode }) {
         setLoading(false);
       } else void refresh();
     };
+    // Some providers emit disconnect before clearing their publicKey.
+    const disconnected = () => {
+      ++connectionAttempt.current;
+      ++generation.current;
+      setWallet(null);
+      setAddress(null);
+      setClient(null);
+      setEscrows([]);
+      setBalance(null);
+      setNotices([]);
+      setLoading(false);
+    };
     wallet.on?.("accountChanged", changed);
-    wallet.on?.("disconnect", changed);
+    wallet.on?.("disconnect", disconnected);
     return () => {
       wallet.removeListener?.("accountChanged", changed);
-      wallet.removeListener?.("disconnect", changed);
+      wallet.removeListener?.("disconnect", disconnected);
     };
   }, [wallet, refresh]);
   async function connect(name?: string) {
+    if (connecting.current) return;
+    connecting.current = true;
+    const attempt = ++connectionAttempt.current;
+    setBusy(true);
     setError(null);
     try {
       const options = availableWallets();
@@ -133,13 +151,30 @@ export function DappProvider({ children }: { children: ReactNode }) {
           "Install Phantom or Solflare, or open this app in your wallet’s browser. Never enter a seed phrase here.",
         );
       const result = await selected.connect();
+      if (attempt !== connectionAttempt.current) return;
+      if (!selected.publicKey || !result.publicKey.equals(selected.publicKey))
+        throw new Error(
+          "Wallet account changed during connection. Please reconnect.",
+        );
+      ++generation.current;
+      setClient(null);
+      setEscrows([]);
+      setBalance(null);
+      setNotices([]);
       setAddress(result.publicKey.toBase58());
       setWallet(selected);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Wallet connection declined.");
+      if (attempt === connectionAttempt.current)
+        setError(
+          e instanceof Error ? e.message : "Wallet connection declined.",
+        );
+    } finally {
+      connecting.current = false;
+      setBusy(false);
     }
   }
   async function disconnect() {
+    ++connectionAttempt.current;
     ++generation.current;
     const previous = wallet;
     setWallet(null);

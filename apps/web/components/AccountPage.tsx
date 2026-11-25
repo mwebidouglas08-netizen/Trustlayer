@@ -12,6 +12,7 @@ import { PageHeading } from "./Dashboard";
 import { useAccount } from "./AccountProvider";
 import { useDapp } from "./DappProvider";
 import { backend } from "@/lib/supabase/client";
+import { availableWallets } from "@/lib/escrow";
 import { normalizeSignature } from "@/lib/workspace";
 export function AccountGate() {
   const { loading, authError } = useAccount();
@@ -45,6 +46,11 @@ export function AccountPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [walletChoice, setWalletChoice] = useState("");
+  const [walletNames, setWalletNames] = useState<string[]>([]);
+  useEffect(() => {
+    setWalletNames(availableWallets().map((w) => w.name));
+  }, []);
   const [wallets, setWallets] = useState<
     { public_key: string; verified_at: string }[]
   >([]);
@@ -217,10 +223,27 @@ export function AccountPage() {
               verifies the signature and creates your private account session.
             </p>
             <div className="action-stack">
+              {!d.address && walletNames.length > 1 && (
+                <label>
+                  Choose your wallet
+                  <select
+                    value={walletChoice}
+                    onChange={(e) => setWalletChoice(e.target.value)}
+                  >
+                    <option value="">Select a wallet</option>
+                    {walletNames.map((name) => (
+                      <option key={name} value={name}>
+                        {name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
               {!d.address ? (
                 <button
                   className="btn primary"
-                  onClick={() => void d.connect()}
+                  disabled={d.busy || (walletNames.length > 1 && !walletChoice)}
+                  onClick={() => void d.connect(walletChoice || undefined)}
                 >
                   <Wallet size={17} />
                   Connect wallet
