@@ -1,3 +1,20 @@
-﻿# Production checklist (summary)
+# Launch gates — not a production certification
 
-See full checklist in `TRUSTLAYER_TryNoah_Fullstack_Build_Specification.md` (repo root copy/reference). Items include: real devnet flow tested, no fake chain data in UI, RLS tested, independent audit before mainnet, multisig authorities, legal docs approved.
+- [ ] Build the canonical Anchor program with a recorded toolchain and Cargo lockfile.
+- [ ] Pass local-validator adversarial integration tests, Rust unit tests, and SQL tests.
+- [ ] Complete independent contract and application audits; resolve all findings.
+- [ ] Resolve or formally accept remaining dependency advisories and test migrations.
+- [ ] Deploy the reviewed program, publish the matching IDL, securely initialize config, and verify mint/network.
+- [ ] Run and record two-wallet devnet lifecycle and both arbitration outcomes, including timeout/pause/rotation cases.
+- [ ] Use secured governance / multisig procedures, upgrade controls, key backups and rotation drills.
+- [ ] Provide an actual staffed arbitration/evidence channel, response SLA, escalation policy and legal-reviewed disclosures before offering protection to users.
+- [ ] Define account-rent, accidental vault deposits, permanently unavailable arbitrator and disaster-recovery policies.
+- [ ] Configure production RPC quotas, shared rate limiting, independent chain reconciliation and service alerts.
+- [x] Deploy account auth, expiring wallet challenges, participant RLS, private storage and live database permission checks.
+- [ ] Complete real-wallet browser authentication and actual file upload/download acceptance tests after Vercel promotion.
+- [ ] Publish retention/deletion procedures; implement malware scanning, distributed storage/abuse quotas and backup recovery.
+- [ ] Reconcile public copy with deployed functionality; never advertise planned security guarantees as implemented.
+- [ ] Review accessibility, browser wallet compatibility, slow/rejected signatures and mobile signing end-to-end.
+- [ ] Legal approval and explicit audit-backed decision before a separately reviewed mainnet-enablement change.
+
+Passing web tests alone does not satisfy these gates. This repository remains test-network-only.

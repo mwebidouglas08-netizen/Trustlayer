@@ -1,1 +1,4 @@
-﻿export default function HelpPage() { return <div className="trust-container py-10"><h1 className="text-2xl font-semibold">Help</h1><p className="mt-2 text-sm text-slate-600">Help center content pending.</p></div>; }
+import { HelpPage } from "@/components/WorkspacePages";
+export default function Page() {
+  return <HelpPage />;
+}

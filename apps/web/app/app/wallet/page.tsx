@@ -1,1 +1,4 @@
-﻿export default function WalletPage() { return <div className="trust-container py-10"><h1 className="text-2xl font-semibold">Wallet</h1><p className="mt-2 text-sm text-slate-600">Connect a Solana wallet (devnet) after configuring wallet adapter providers. Never share seed phrases.</p></div>; }
+import { WalletPage } from "@/components/WorkspacePages";
+export default function Page() {
+  return <WalletPage />;
+}

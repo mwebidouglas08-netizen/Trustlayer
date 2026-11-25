@@ -1,35 +1,32 @@
-﻿import type { Metadata } from "next";
-import { DM_Sans } from "next/font/google";
+import type { Metadata } from "next";
 import "./globals.css";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  variable: "--font-sans",
-  display: "swap",
-});
-
+import { AccountProvider } from "@/components/AccountProvider";
+import { DappProvider } from "@/components/DappProvider";
 export const metadata: Metadata = {
-  title: "TRUSTLAYER — Trade with confidence",
+  title: "Trustlayer — Trade with confidence",
   description:
-    "Non-custodial USDC escrow on Solana. Agree on terms, secure payment, complete with clear settlement rules.",
+    "Wallet-connected Solana escrow. Clear agreements, transparent payments, and verifiable settlement.",
 };
-
 export default function RootLayout({
   children,
-}: Readonly<{ children: React.ReactNode }>) {
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <html lang="en" className={dmSans.variable}>
-      <body className="font-sans min-h-screen flex flex-col">
-        <a className="skip-link" href="#main-content">
-          Skip to main content
-        </a>
-        <SiteHeader />
-        <main id="main-content" className="flex-1 w-full">
-          {children}
-        </main>
-        <SiteFooter />
+    <html lang="en">
+      <body>
+        <AccountProvider>
+          <DappProvider>
+            <a className="skip-link" href="#main-content">
+              Skip to main content
+            </a>
+            <SiteHeader />
+            {children}
+            <SiteFooter />
+          </DappProvider>
+        </AccountProvider>
       </body>
     </html>
   );

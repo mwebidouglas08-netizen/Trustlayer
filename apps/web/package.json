@@ -1,35 +1,39 @@
 {
-    "version":  "0.1.0",
-    "name":  "trustlayer-web",
-    "scripts":  {
-                    "build":  "next build",
-                    "typecheck":  "tsc --noEmit",
-                    "lint":  "next lint",
-                    "start":  "next start",
-                    "dev":  "next dev",
-                    "test":  "echo \"No app tests configured yet\" \u0026\u0026 exit 0"
-                },
-    "devDependencies":  {
-                            "tailwindcss":  "3.4.13",
-                            "postcss":  "8.4.47",
-                            "@types/react-dom":  "18.3.0",
-                            "@types/node":  "20.16.10",
-                            "eslint":  "8.57.1",
-                            "autoprefixer":  "10.4.20",
-                            "@types/react":  "18.3.10",
-                            "typescript":  "5.6.2",
-                            "eslint-config-next":  "14.2.18"
-                        },
-    "dependencies":  {
-                         "zod":  "3.23.8",
-                         "react-dom":  "18.3.1",
-                         "tailwind-merge":  "2.5.2",
-                         "clsx":  "2.1.1",
-                         "react":  "18.3.1",
-                         "next":  "14.2.18"
-                     },
-    "engines":  {
-                    "node":  "26.x"
-                },
-    "private":  true
+  "version": "0.1.0",
+  "name": "trustlayer-web",
+  "scripts": {
+    "build": "next build",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint app components lib tests --max-warnings=0",
+    "start": "next start",
+    "dev": "next dev",
+    "test": "tsx --test tests/*.test.ts"
+  },
+  "devDependencies": {
+    "@types/node": "20.16.10",
+    "@types/react": "18.3.10",
+    "@types/react-dom": "18.3.0",
+    "autoprefixer": "10.4.20",
+    "eslint": "8.57.1",
+    "eslint-config-next": "15.5.29",
+    "postcss": "8.5.33",
+    "tailwindcss": "3.4.13",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "0.30.1",
+    "@solana/spl-token": "0.4.15",
+    "@solana/web3.js": "1.98.4",
+    "@supabase/supabase-js": "2.119.2",
+    "buffer": "6.0.3",
+    "lucide-react": "1.80.0",
+    "next": "15.5.29",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "engines": {
+    "node": ">=22.14 <23"
+  },
+  "private": true
 }

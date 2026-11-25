@@ -1,1 +1,4 @@
-﻿export default function ProfilePage() { return <div className="trust-container py-10"><h1 className="text-2xl font-semibold">Profile</h1><p className="mt-2 text-sm text-slate-600">Profile settings pending Supabase integration.</p></div>; }
+import { AccountPage } from "@/components/AccountPage";
+export default function Page() {
+  return <AccountPage />;
+}

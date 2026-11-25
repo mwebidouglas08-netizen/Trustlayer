@@ -1,14 +1,27 @@
-﻿export default function HowItWorksPage() {
-  return (
-    <div className="trust-container py-12 max-w-3xl">
-      <h1 className="text-3xl font-semibold text-ink-900">How TRUSTLAYER works</h1>
-      <p className="mt-4 text-slate-600">TRUSTLAYER is a transaction-protection layer, not a marketplace.</p>
-      <ol className="mt-8 space-y-6 list-decimal list-inside text-slate-700">
-        <li><strong>Agree:</strong> buyer and seller confirm terms, amount (USDC), deadlines, and acceptance criteria. Both accept the same agreement version.</li>
-        <li><strong>Secure:</strong> buyer funds a non-custodial Solana escrow vault controlled by the on-chain program. Seller cannot withdraw funds directly.</li>
-        <li><strong>Complete:</strong> buyer reviews evidence and releases funds on-chain, or opens a dispute under the published policy for human review and authorized settlement.</li>
-      </ol>
-      <p className="mt-8 text-sm text-slate-600">Blockchain records the transaction; it does not prove a physical item was delivered. Evidence and disputes remain off-chain and policy-driven.</p>
-    </div>
-  );
+import { InfoPage } from "@/components/InfoPage";
+const content = {
+  title: "A clearer agreement. A confident next step.",
+  intro:
+    "Trustlayer is a private collaboration workspace, not a marketplace, insurance policy or guarantee of delivery.",
+  sections: [
+    {
+      title: "01 · Establish your identity",
+      text: "Connect a Solana wallet and sign a login message to create an account session. A separate expiring ownership challenge links the wallet to your account. Neither action sends tokens.",
+    },
+    {
+      title: "02 · Get the details right",
+      text: "Create a private draft with a verified seller address, amount, deadline and clear acceptance criteria. Attach supporting files. Only your account can see a draft until you choose to send the proposal.",
+    },
+    {
+      title: "03 · Share and agree",
+      text: "The verified seller can review the proposal in Invitations and accept its locked terms. Both participants keep access to the record, activity and private attachments. The URL alone does not grant access.",
+    },
+    {
+      title: "Payments are a separate launch gate",
+      text: "The owner has not deployed or audited the Solana escrow program. Accepted terms are not a funded escrow. Payment controls remain disabled until that deployment, independent security review and operational safeguards are complete.",
+    },
+  ],
+};
+export default function Page() {
+  return <InfoPage {...content} />;
 }

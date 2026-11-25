@@ -1,8 +1,31 @@
-﻿export default function StatusPage() {
+import { BackendStatus } from "@/components/BackendStatus";
+import { InfoPage } from "@/components/InfoPage";
+const content = {
+  title: "Service status, not a promise.",
+  intro:
+    "This release does not have independent uptime monitoring or a public incident feed.",
+  sections: [
+    {
+      title: "Web liveness",
+      text: "The /api/health endpoint reports web liveness and whether deployment variables are present. It does not certify RPC, program or arbitration readiness.",
+    },
+    {
+      title: "Chain readiness",
+      text: "After wallet connection, the app verifies network genesis, published program IDL, mint and decimals, then reads confirmed account state. Errors are shown rather than substituted with simulated balances.",
+    },
+    {
+      title: "Operational readiness",
+      text: "The operator must monitor RPC, authority availability and program state before offering escrow services. A responsive website alone does not mean settlement infrastructure is ready.",
+    },
+  ],
+};
+export default function Page() {
   return (
-    <div className="trust-container py-12 max-w-3xl">
-      <h1 className="text-3xl font-semibold text-ink-900">Status</h1>
-      <p className="mt-4 text-slate-700 text-sm">System status is not yet wired to live monitors. Check your network (Solana cluster) and Supabase health via your deployment dashboards.</p>
-    </div>
+    <>
+      <div className="public-backend-status">
+        <BackendStatus />
+      </div>
+      <InfoPage {...content} />
+    </>
   );
 }

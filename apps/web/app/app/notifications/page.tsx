@@ -1,1 +1,10 @@
-﻿export default function NotificationsPage() { return <div className="trust-container py-10"><h1 className="text-2xl font-semibold">Notifications</h1><p className="mt-2 text-sm text-slate-600">Notifications pending backend.</p></div>; }
+import { NotificationsPage } from "@/components/WorkspacePages";
+import { SavedActivity } from "@/components/AgreementWorkspace";
+export default function Page() {
+  return (
+    <>
+      <NotificationsPage />
+      <SavedActivity />
+    </>
+  );
+}

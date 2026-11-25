@@ -1,8 +1,7 @@
-﻿node_modules
+node_modules
 .pnpm-store
-.env
-.env.local
-.env.*.local
+.env*
+!.env.example
 dist
 build
 .next
@@ -12,3 +11,7 @@ target
 *.log
 supabase/.branches
 supabase/.temp
+
+*.tsbuildinfo
+playwright-report/
+test-results/

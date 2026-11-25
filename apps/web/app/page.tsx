@@ -1,78 +1,123 @@
-﻿import Link from "next/link";
-
-export default function HomePage() {
+import Link from "next/link";
+import {
+  ArrowUpRight,
+  Check,
+  Fingerprint,
+  LockKeyhole,
+  ShieldCheck,
+} from "lucide-react";
+export default function Home() {
   return (
-    <>
-      <section className="border-b border-slate-200 bg-white">
-        <div className="trust-container py-12 sm:py-16 lg:py-20">
-          <p className="text-sm font-semibold tracking-wide text-trust-700 uppercase">TRUSTLAYER</p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-ink-900 sm:text-4xl lg:text-5xl max-w-3xl">
-            Trade with confidence.
+    <main id="main-content" className="landing">
+      <section className="hero">
+        <div className="hero-copy">
+          <span className="hero-tag">
+            <span className="live-dot" /> PRIVATE AGREEMENTS · VERIFIED WALLET
+            IDENTITY
+          </span>
+          <h1>
+            A good deal
+            <br />
+            starts with
+            <br />
+            <em>a little trust.</em>
           </h1>
-          <p className="mt-6 text-lg text-slate-600 max-w-2xl leading-relaxed">
-            Agree on terms, secure payment in a non-custodial Solana USDC escrow, and complete transactions with
-            clear evidence and settlement rules. Designed for deals that begin on messaging apps, social media, or referrals.
+          <p>
+            Agree on the details. Know your counterparty’s wallet. Keep the
+            record. A thoughtful workspace for clearer deals—with your identity
+            in control.
           </p>
-          <div className="mt-10 flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4">
-            <Link
-              href="/app/transactions/new"
-              className="inline-flex items-center justify-center rounded-md bg-trust-700 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-trust-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-trust-500 focus-visible:ring-offset-2 w-full sm:w-auto"
-            >
-              Create a protected transaction
+          <div className="button-row">
+            <Link className="btn primary large" href="/app">
+              Enter your workspace <ArrowUpRight size={19} />
             </Link>
-            <Link
-              href="/how-it-works"
-              className="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-ink-800 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-trust-500 focus-visible:ring-offset-2 w-full sm:w-auto"
-            >
-              See how it works
+            <Link className="text-link" href="/how-it-works">
+              See how it works ↗
             </Link>
           </div>
-        </div>
-      </section>
-      <section className="trust-container py-12 sm:py-16" aria-labelledby="how-heading">
-        <h2 id="how-heading" className="text-2xl font-semibold text-ink-900">How it works</h2>
-        <div className="mt-8 grid gap-6 sm:gap-8 sm:grid-cols-3">
-          <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-xs font-semibold text-trust-700 uppercase tracking-wide">Step 1</p>
-            <h3 className="mt-2 text-lg font-semibold text-ink-900">Agree</h3>
-            <p className="mt-2 text-sm text-slate-600 leading-relaxed">
-              Buyer and seller confirm terms, USDC amount, deadlines, and acceptance criteria before funding.
-            </p>
-          </div>
-          <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-xs font-semibold text-trust-700 uppercase tracking-wide">Step 2</p>
-            <h3 className="mt-2 text-lg font-semibold text-ink-900">Secure</h3>
-            <p className="mt-2 text-sm text-slate-600 leading-relaxed">
-              Buyer funds a program-controlled escrow on Solana. The seller cannot withdraw funds directly.
-            </p>
-          </div>
-          <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-xs font-semibold text-trust-700 uppercase tracking-wide">Step 3</p>
-            <h3 className="mt-2 text-lg font-semibold text-ink-900">Complete</h3>
-            <p className="mt-2 text-sm text-slate-600 leading-relaxed">
-              Buyer releases after acceptance, or disputes follow the published policy with authorized on-chain resolution.
-            </p>
+          <div className="hero-assurances">
+            <span>
+              <Check size={15} />
+              Wallet-signed
+            </span>
+            <span>
+              <Check size={15} />
+              Private documents
+            </span>
+            <span>
+              <Check size={15} />
+              Shared agreements
+            </span>
           </div>
         </div>
-      </section>
-      <section className="border-t border-slate-200 bg-slate-100/50" aria-labelledby="trust-heading">
-        <div className="trust-container py-12 sm:py-16">
-          <h2 id="trust-heading" className="text-2xl font-semibold text-ink-900">Built for clarity and safety</h2>
-          <ul className="mt-6 grid gap-4 sm:grid-cols-2 text-sm text-slate-700 list-disc list-inside max-w-4xl leading-relaxed">
-            <li>You sign with your own wallet; TRUSTLAYER does not hold your keys.</li>
-            <li>USDC on Solana in the initial product flow, with clear network fee guidance.</li>
-            <li>Private evidence is stored off-chain with access controls, not on public chain data.</li>
-            <li>Disputes are human-reviewed under policy; AI may assist summaries only.</li>
-          </ul>
-          <p className="mt-8 text-sm text-slate-600 flex flex-wrap gap-x-2 gap-y-1">
-            <Link className="text-trust-700 underline focus:outline-none focus-visible:ring-2 focus-visible:ring-trust-500 rounded-sm" href="/security">Security model</Link>
-            <span aria-hidden="true">·</span>
-            <Link className="text-trust-700 underline focus:outline-none focus-visible:ring-2 focus-visible:ring-trust-500 rounded-sm" href="/fees">Fees</Link>
-            <span aria-hidden="true">·</span>
-            <Link className="text-trust-700 underline focus:outline-none focus-visible:ring-2 focus-visible:ring-trust-500 rounded-sm" href="/risk-disclosure">Risk disclosure</Link>
+        <div
+          className="hero-art"
+          aria-label="Agreement workflow illustration, not live transaction data"
+        >
+          <div className="orbit orbit-one" />
+          <div className="orbit orbit-two" />
+          <span className="art-spark spark-one">✦</span>
+          <span className="art-spark spark-two">✦</span>
+          <div className="floating-label label-one">
+            <Fingerprint size={19} />
+            <span>
+              Your wallet.
+              <br />
+              <strong>Your signature.</strong>
+            </span>
+          </div>
+          <div className="escrow-illustration">
+            <div className="illustration-top">
+              <span className="brand-mark">
+                <ShieldCheck size={23} />
+              </span>
+              <span>THE SAFER WAY TO TRADE</span>
+              <span className="live-dot" />
+            </div>
+            <div className="illustration-shield">
+              <ShieldCheck size={69} strokeWidth={1.3} />
+            </div>
+            <h2>Protected by agreement.</h2>
+            <p>A private, shared understanding</p>
+            <div className="illustration-flow">
+              <span>Agree</span>
+              <i />
+              <span>Review</span>
+              <i />
+              <span>Accept</span>
+            </div>
+            <div className="illustration-footer">
+              <LockKeyhole size={14} />
+              Private to verified participants
+            </div>
+          </div>
+          <div className="floating-label label-two">
+            <span className="token-icon">$</span>
+            <span>
+              Clear agreements.
+              <br />
+              <strong>No invented payment states.</strong>
+            </span>
+          </div>
+          <p className="art-caption">
+            An illustration of the agreement flow. Not a live transaction.
           </p>
         </div>
       </section>
-    </>
+      <section className="landing-bottom">
+        <div>
+          <span className="eyebrow">LESS GUESSWORK. MORE CONFIDENCE.</span>
+          <h2>Built around both sides of the deal.</h2>
+        </div>
+        <p>
+          A clear agreement protects the buyer and the seller. Review terms,
+          track escrow state, and verify every payment on-chain. This release is
+          unaudited and restricted to test networks.
+        </p>
+        <Link className="text-link" href="/risk-disclosure">
+          Know the risks <ArrowUpRight size={16} />
+        </Link>
+      </section>
+    </main>
   );
 }
