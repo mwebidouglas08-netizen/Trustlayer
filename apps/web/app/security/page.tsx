@@ -17,8 +17,8 @@ const content = {
       text: "The upgrade authority can change the program. Management can pause new deposits and rotate the arbitrator, including for existing cases. RPC integrity and arbitrator availability remain trust dependencies.",
     },
     {
-      title: "What is not provided",
-      text: "There is no hosted private evidence service, staffed dispute desk, insurance, or audit certification. Agreement files live in your browser and downloads. The repository documents outstanding dependency advisories and launch gates.",
+      title: "Private workspace, with limits",
+      text: "Supabase verifies account login signatures. Wallet linking uses expiring, single-use Ed25519 challenges. Database policies and private storage limit shared records to participants. There is no staffed dispute desk, malware scanning, insurance, or independent audit certification. Escrow is not deployed; its mainnet controls remain disabled.",
     },
   ],
 };

@@ -12,7 +12,8 @@ export default function Home() {
       <section className="hero">
         <div className="hero-copy">
           <span className="hero-tag">
-            <span className="live-dot" /> BUILT ON SOLANA · TEST-NETWORK RELEASE
+            <span className="live-dot" /> PRIVATE AGREEMENTS · VERIFIED WALLET
+            IDENTITY
           </span>
           <h1>
             A good deal
@@ -22,8 +23,9 @@ export default function Home() {
             <em>a little trust.</em>
           </h1>
           <p>
-            Agree on the details. Secure the payment. Release when it’s right. A
-            simpler way to trade with confidence—with your wallet in control.
+            Agree on the details. Know your counterparty’s wallet. Keep the
+            record. A thoughtful workspace for clearer deals—with your identity
+            in control.
           </p>
           <div className="button-row">
             <Link className="btn primary large" href="/app">
@@ -40,17 +42,17 @@ export default function Home() {
             </span>
             <span>
               <Check size={15} />
-              Transparent fees
+              Private documents
             </span>
             <span>
               <Check size={15} />
-              On-chain settlement
+              Shared agreements
             </span>
           </div>
         </div>
         <div
           className="hero-art"
-          aria-label="Escrow flow illustration, not live transaction data"
+          aria-label="Agreement workflow illustration, not live transaction data"
         >
           <div className="orbit orbit-one" />
           <div className="orbit orbit-two" />
@@ -76,29 +78,29 @@ export default function Home() {
               <ShieldCheck size={69} strokeWidth={1.3} />
             </div>
             <h2>Protected by agreement.</h2>
-            <p>USDC escrow on Solana</p>
+            <p>A private, shared understanding</p>
             <div className="illustration-flow">
               <span>Agree</span>
               <i />
-              <span>Secure</span>
+              <span>Review</span>
               <i />
-              <span>Release</span>
+              <span>Accept</span>
             </div>
             <div className="illustration-footer">
               <LockKeyhole size={14} />
-              Funds follow the program’s rules
+              Private to verified participants
             </div>
           </div>
           <div className="floating-label label-two">
             <span className="token-icon">$</span>
             <span>
-              Transparent payments.
+              Clear agreements.
               <br />
-              <strong>No hidden platform fees.</strong>
+              <strong>No invented payment states.</strong>
             </span>
           </div>
           <p className="art-caption">
-            An illustration of the escrow flow. Not a live transaction.
+            An illustration of the agreement flow. Not a live transaction.
           </p>
         </div>
       </section>

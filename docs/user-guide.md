@@ -1,30 +1,33 @@
 # User guide
 
-## First visit
+## Sign in and verify your wallet
 
-Open `/app`, connect Phantom or Solflare, and confirm the network, program ID and token mint under Settings. Connection is not a payment or a verified website account. Never enter a seed phrase. If the program is not configured or RPC is unavailable, balances and signing stay unavailable.
+1. Open **Account & identity** at `/app/profile`.
+2. Connect Phantom or Solflare, then choose **Sign in with Solana**. Review the message. It signs you into a Supabase account; it does not move tokens.
+3. Choose **Verify connected wallet** and review the separate five-minute ownership challenge. The backend checks the signature and records the link. This makes proposals addressed to that wallet visible to your account.
+4. Return with the same login wallet on another device. Wallet connection and account session are separate. Signing out clears the account session on this device, not on-chain funds.
 
-## Buyer
+Never share a seed phrase. Do not assume a wallet address proves someone's real-world legal identity.
 
-1. Create a transaction using the independently verified seller wallet, positive USDC amount, future deadline, and clear terms.
-2. Review the fee and seller net payout; sign creation. This uses SOL for fees and rent, not USDC funding.
-3. Download the agreement JSON immediately. Share it and the escrow link with the seller and obtain agreement out-of-band.
-4. Open the detail page, choose **Fund escrow**, review the confirmation text, and sign the USDC deposit. Funding uses your associated token account. Check your wallet's simulated transaction first.
-5. After satisfactory delivery, choose **Accept & release payment**. Otherwise open a dispute and arrange evidence review with the configured arbitrator. There is no automatic refund or built-in staffed support service.
+## Create and share an agreement
 
-## Seller
+1. Open **Agreements → New agreement**.
+2. Enter a title, independently verified seller address, positive amount, future deadline and clear acceptance criteria.
+3. **Save private draft** stores it in your Supabase account. No one else can read the draft.
+4. Edit while it remains a draft; attach relevant files if needed. The draft and its files become shared when you send the proposal.
+5. Verify your own wallet and choose **Send proposal**. Terms are now locked. Share the private link with your counterparty; possessing the URL alone does not grant access.
+6. The seller signs into an account and verifies the named wallet, then reviews **Invitations**. Accepting records the exact proposal and acceptance time. It does not fund escrow, prove delivery, or appoint an arbitrator.
 
-Escrows naming your wallet appear in Transactions; unfunded ones appear under Awaiting funding. Import the buyer's JSON file in the escrow detail screen to verify its hash before relying on the terms. An unfunded agreement can be cancelled. Once funded, submit a delivery claim and send evidence separately. After the deadline, you may open a dispute if the buyer is inactive. The arbitrator can refund or pay you; it is not an automatic release.
+Creators can cancel a draft/proposal before acceptance. Accepted records cannot be edited or cancelled through the app. If terms need changing, create a new proposal and clarify supersession with your counterparty.
 
-## Operator
+## Attachments and activity
 
-Connect the configured management or arbitration wallet at `/staff`. Management can pause/resume new escrows and deposits while preserving exits. Arbitrators inspect an escrow by address and select a full refund or seller payout after external evidence review. No user directory, private case queue or audit database is exposed by these routes. Authority rotation uses the secured operator script or multisig tooling, not a browser secret.
+Participants may upload PDF, PNG, JPEG or plain text files up to 10 MB. Downloads use short-lived private links. Shared files cannot be silently overwritten or deleted. Do not upload passwords, wallet secrets or unnecessary sensitive data. Files are not virus-scanned and should not be treated as independently verified evidence.
 
-## Recovery and limitations
+The agreement's activity panel and **Activity** page show saved collaboration events. Wallet transaction receipts are displayed separately and are session-local. Download/export your records as needed. Contact the deployment operator for retention or deletion requests; a staffed contact must be established before broad production use.
 
-- A confirmation timeout includes the submitted signature. Check it in Explorer before trying again; a timeout is not proof of failure.
-- Refresh updates confirmed chain state. Deadlines may require refresh before newly available actions appear.
-- Switching accounts clears cached wallet data. Disconnecting does not cancel transactions.
-- Activity is session-local, not a permanent audit trail.
-- Terms are stored only in this browser and your downloaded files. Clearing site storage removes local copies, not funds. SHA-256 verification proves matching bytes, not physical delivery or seller consent.
-- Arbitrator availability, upgrade authority security and RPC integrity matter. Mainnet is disabled; use test tokens only.
+## Payments are not active
+
+The owner confirmed the escrow program has not been deployed or audited. The database does not hold or move USDC. A saved amount, proposal or acceptance is never displayed as a funded escrow. The on-chain interface remains gated until reviewed deployment and testing are complete; mainnet is disabled.
+
+If testing a future deployed escrow: create, save exact hashed terms, fund separately, verify confirmed state and only then release or dispute. A timeout is not proof a signature failed—check Explorer before retrying. See deployment and risk documentation first.

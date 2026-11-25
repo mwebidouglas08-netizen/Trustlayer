@@ -18,7 +18,7 @@ insert into auth.users (id, email) values
   ('22222222-2222-4222-8222-222222222222', 'outsider@test.invalid');
 insert into public.profiles (id, display_name) values
   ('11111111-1111-4111-8111-111111111111', 'Buyer'),
-  ('22222222-2222-4222-8222-222222222222', 'Outsider');
+  ('22222222-2222-4222-8222-222222222222', 'Outsider') on conflict(id) do update set display_name=excluded.display_name;
 insert into public.transactions (public_reference, creator_user_id, title, transaction_type, amount_base_units, token_mint, cluster, program_id)
 values ('test-reference', '11111111-1111-4111-8111-111111111111', 'Test', 'goods', 1, 'test-mint', 'devnet', 'test-program');
 set local role authenticated;

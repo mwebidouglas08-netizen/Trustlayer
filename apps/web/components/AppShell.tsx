@@ -19,13 +19,17 @@ import {
   Inbox,
   ExternalLink,
   LogOut,
+  FolderLock,
+  UserRound,
 } from "lucide-react";
+import { useAccount } from "./AccountProvider";
 import { useDapp } from "./DappProvider";
 import { shortAddress } from "@/lib/protocol";
 const links = [
   { href: "/app", label: "Overview", icon: LayoutDashboard },
-  { href: "/app/transactions", label: "Transactions", icon: FileText },
-  { href: "/app/invitations", label: "Awaiting funding", icon: Inbox },
+  { href: "/app/agreements", label: "Agreements", icon: FolderLock },
+  { href: "/app/transactions", label: "On-chain escrow", icon: FileText },
+  { href: "/app/invitations", label: "Invitations", icon: Inbox },
   { href: "/app/wallet", label: "My wallet", icon: Wallet },
   { href: "/app/disputes", label: "Disputes", icon: Scale },
 ];
@@ -34,6 +38,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [menu, setMenu] = useState(false);
   const [walletMenu, setWalletMenu] = useState(false);
   const d = useDapp();
+  const account = useAccount();
   return (
     <div className="app-shell">
       <aside className={`sidebar ${menu ? "open" : ""}`}>
@@ -72,16 +77,23 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="sidebar-bottom">
           <div className="network-card">
             <span className="live-dot" />
-            <strong>Solana test network</strong>
+            <strong>Private by default</strong>
             <p>
-              Real transactions. Test tokens.
+              Account-backed agreements.
               <br />
-              Mainnet payments disabled.
+              Escrow activation pending.
             </p>
             <Link href="/app/settings">
               View configuration <ArrowUpRight size={13} />
             </Link>
           </div>
+          <Link
+            className={`nav-item ${path === "/app/profile" ? "active" : ""}`}
+            href="/app/profile"
+          >
+            <UserRound size={19} />
+            Account & identity
+          </Link>
           <Link className="nav-item" href="/app/settings">
             <Settings size={19} />
             Settings
@@ -124,14 +136,23 @@ export function AppShell({ children }: { children: ReactNode }) {
                   ? "Operator console"
                   : links.find(
                       (l) => l.href !== "/app" && path.startsWith(l.href),
-                    )?.label || "Overview"}
+                    )?.label ||
+                    (path === "/app/profile"
+                      ? "Account & identity"
+                      : path === "/app/settings"
+                        ? "Settings"
+                        : "Overview")}
               </strong>
             </span>
           </div>
           <div className="topbar-actions">
+            <Link className="account-chip" href="/app/profile">
+              <UserRound size={15} />
+              {account.session ? "My account" : "Sign in"}
+            </Link>
             <span className="network-pill">
               <span className="live-dot" />
-              Testnet mode
+              {d.issue ? "Escrow inactive" : "Test-network escrow"}
             </span>
             <button
               className={`icon-btn ${d.loading ? "spinning" : ""}`}
@@ -143,7 +164,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </button>
             <Link
               className="icon-btn"
-              aria-label="Session activity"
+              aria-label="Workspace activity"
               href="/app/notifications"
             >
               <Bell size={19} />
@@ -185,7 +206,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div className="notice warning">
               <ShieldCheck size={18} />
               <div>
-                <strong>Preview · no program configured</strong>
+                <strong>Escrow payments are not activated</strong>
                 <p>{d.issue}</p>
               </div>
               <Link href="/app/settings">Setup ↗</Link>

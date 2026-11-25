@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { AccountProvider } from "@/components/AccountProvider";
 import { DappProvider } from "@/components/DappProvider";
 export const metadata: Metadata = {
   title: "Trustlayer — Trade with confidence",
@@ -16,14 +17,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <DappProvider>
-          <a className="skip-link" href="#main-content">
-            Skip to main content
-          </a>
-          <SiteHeader />
-          {children}
-          <SiteFooter />
-        </DappProvider>
+        <AccountProvider>
+          <DappProvider>
+            <a className="skip-link" href="#main-content">
+              Skip to main content
+            </a>
+            <SiteHeader />
+            {children}
+            <SiteFooter />
+          </DappProvider>
+        </AccountProvider>
       </body>
     </html>
   );

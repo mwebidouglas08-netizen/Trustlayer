@@ -19,6 +19,10 @@ import { Action, agreementText, parseAmount } from "./protocol";
 import { getSolanaCluster } from "./solana/cluster";
 
 export interface BrowserWallet {
+  signMessage?(
+    message: Uint8Array,
+    encoding?: string,
+  ): Promise<Uint8Array | { signature: Uint8Array }>;
   publicKey: PublicKey | null;
   connect(): Promise<{ publicKey: PublicKey }>;
   disconnect(): Promise<void>;

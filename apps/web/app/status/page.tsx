@@ -1,3 +1,4 @@
+import { BackendStatus } from "@/components/BackendStatus";
 import { InfoPage } from "@/components/InfoPage";
 const content = {
   title: "Service status, not a promise.",
@@ -19,5 +20,12 @@ const content = {
   ],
 };
 export default function Page() {
-  return <InfoPage {...content} />;
+  return (
+    <>
+      <div className="public-backend-status">
+        <BackendStatus />
+      </div>
+      <InfoPage {...content} />
+    </>
+  );
 }

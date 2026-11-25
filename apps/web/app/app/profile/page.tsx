@@ -1,4 +1,4 @@
-import { WalletPage } from "@/components/WorkspacePages";
+import { AccountPage } from "@/components/AccountPage";
 export default function Page() {
-  return <WalletPage />;
+  return <AccountPage />;
 }

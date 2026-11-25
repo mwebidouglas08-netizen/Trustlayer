@@ -1,4 +1,4 @@
-import { Transactions } from "@/components/Dashboard";
+import { AgreementList } from "@/components/AgreementWorkspace";
 export default function Page() {
-  return <Transactions mode="invitations" />;
+  return <AgreementList invitations />;
 }

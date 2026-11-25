@@ -13,9 +13,11 @@ test("landing opens honest disconnected workspace without invented balances", as
     page.getByRole("heading", { name: "Trade with confidence." }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Your wallet. Your workspace." }),
+    page.getByRole("heading", { name: "A workspace that stays with you." }),
   ).toBeVisible();
-  await expect(page.getByText("Preview · no program configured")).toBeVisible();
+  await expect(
+    page.getByText("Escrow payments are not activated"),
+  ).toBeVisible();
   await page.screenshot({
     path: `test-results/workspace-${info.project.name}.png`,
     fullPage: true,
@@ -99,4 +101,43 @@ test("RPC rejects unsupported methods without reaching an upstream", async ({
     data: { jsonrpc: "2.0", id: 1, method: "getHealth" },
   });
   expect(badOrigin.status()).toBe(403);
+});
+
+test("saved agreements require an authenticated account, not just a wallet connection", async ({
+  page,
+}, info) => {
+  await page.goto("/app/agreements");
+  await expect(
+    page.getByRole("heading", { name: "Every good deal starts here." }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Sign in to your account" }),
+  ).toBeVisible();
+  await page.getByRole("link", { name: "Sign in to your account" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(
+    "Welcome to your workspace",
+  );
+  await expect(page.getByRole("button", { name: "Save profile" })).toHaveCount(
+    0,
+  );
+  await page.screenshot({
+    path: `test-results/account-${info.project.name}.png`,
+    fullPage: true,
+  });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBeTruthy();
+});
+test("private agreement URLs do not reveal content to anonymous visitors", async ({
+  page,
+}) => {
+  await page.goto("/app/agreements/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa");
+  await expect(
+    page.getByRole("link", { name: "Sign in to your account" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Accept these terms" }),
+  ).toHaveCount(0);
 });

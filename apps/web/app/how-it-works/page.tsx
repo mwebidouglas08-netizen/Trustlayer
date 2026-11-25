@@ -1,24 +1,24 @@
 import { InfoPage } from "@/components/InfoPage";
 const content = {
-  title: "A clearer agreement. A safer payment.",
+  title: "A clearer agreement. A confident next step.",
   intro:
-    "Trustlayer is a wallet-first escrow tool, not a marketplace or a guarantee of delivery.",
+    "Trustlayer is a private collaboration workspace, not a marketplace, insurance policy or guarantee of delivery.",
   sections: [
     {
-      title: "01 · Agree",
-      text: "The buyer records the seller, amount, deadline, and a hash of the terms. Download the exact agreement JSON and obtain seller consent separately before funding. Import the file to verify its on-chain hash.",
+      title: "01 · Establish your identity",
+      text: "Connect a Solana wallet and sign a login message to create an account session. A separate expiring ownership challenge links the wallet to your account. Neither action sends tokens.",
     },
     {
-      title: "02 · Secure",
-      text: "Sign the USDC deposit from your associated token account. The funds are held by a program-controlled vault. Both parties can inspect the escrow in the app and on Solana Explorer.",
+      title: "02 · Get the details right",
+      text: "Create a private draft with a verified seller address, amount, deadline and clear acceptance criteria. Attach supporting files. Only your account can see a draft until you choose to send the proposal.",
     },
     {
-      title: "03 · Complete",
-      text: "After satisfactory delivery, the buyer releases payment. A buyer can open a dispute while funded; a seller can escalate after the deadline. The configured arbitrator can refund the buyer or pay the seller. There are no automatic refunds.",
+      title: "03 · Share and agree",
+      text: "The verified seller can review the proposal in Invitations and accept its locked terms. Both participants keep access to the record, activity and private attachments. The URL alone does not grant access.",
     },
     {
-      title: "Use test tokens only",
-      text: "A deployed and initialized program, matching published IDL, test SOL and the configured six-decimal token are required. The unconfigured workspace is a preview; it never invents balances or confirmations.",
+      title: "Payments are a separate launch gate",
+      text: "The owner has not deployed or audited the Solana escrow program. Accepted terms are not a funded escrow. Payment controls remain disabled until that deployment, independent security review and operational safeguards are complete.",
     },
   ],
 };

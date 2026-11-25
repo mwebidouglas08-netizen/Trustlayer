@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   Wallet,
 } from "lucide-react";
+import { BackendStatus } from "./BackendStatus";
 import { useDapp, ConnectionGate, Receipt } from "./DappProvider";
 import { PageHeading } from "./Dashboard";
 import { formatAmount } from "@/lib/protocol";
@@ -139,7 +140,10 @@ export function SettingsPage() {
     ["USDC mint", process.env.NEXT_PUBLIC_USDC_MINT || "Not configured"],
     ["Mainnet payments", "Disabled in this release"],
     ["Chain reads", "Confirmed commitment · same-origin RPC proxy"],
-    ["Database", "Not used for wallet-first escrow state"],
+    [
+      "Database",
+      "Supabase accounts, agreements and private files; never a substitute for chain state",
+    ],
     [
       "Arbitrator",
       d.client?.config.arbitrationAuthority.toBase58() ||
@@ -161,6 +165,7 @@ export function SettingsPage() {
         title="Network & settings"
         description="Check exactly which program and token you are interacting with."
       />
+      <BackendStatus />
       <section className="panel form-panel">
         <h2>Deployment configuration</h2>
         <dl className="detail-list">
@@ -241,19 +246,19 @@ export function HelpPage() {
         {[
           [
             "How do I get started?",
-            "Install Phantom or Solflare, connect your wallet, and check the network and mint under Settings. A deployment operator must configure the program first. You need test SOL and the configured six-decimal test token.",
+            "Open Account & identity, connect Phantom or Solflare, and sign in with a message signature. Verify your wallet separately, then create a private agreement. These workspace actions do not require a SOL deposit.",
           ],
           [
             "Does connecting move my funds?",
-            "No. Connecting reveals your public wallet address. Each create, deposit, release, or dispute requires a separate wallet signature.",
+            "No. Connecting reveals your public address. Signing in creates an account session, and wallet verification proves ownership. Neither transfers tokens. Future on-chain payments require separate transaction signatures.",
           ],
           [
             "How do agreement terms work?",
-            "The buyer creates the agreement and downloads its exact JSON. Share it with the seller before funding. Import it on the detail page to verify its SHA-256 hash against the on-chain record. The app does not host private evidence or certify seller consent.",
+            "Saved drafts are private to the creator. Sending a proposal locks the terms and shares them with the signature-verified seller. Acceptance is recorded for both participants but does not fund escrow. You can export the record; on-chain hashed JSON is a separate flow.",
           ],
           [
             "What if delivery goes wrong?",
-            "A buyer can open a dispute while funded. A seller can escalate after the delivery deadline. The configured arbitrator can refund the buyer or pay the seller. There are no automatic refunds, appeals, or staffed case-management services in this release.",
+            "Use your agreed review and support channel. Private files can preserve supporting information, but the workspace is not a staffed arbitration service and cannot issue refunds. The separate escrow program is not deployed, so no financial protection or on-chain resolution is active.",
           ],
           [
             "What if a transaction times out?",

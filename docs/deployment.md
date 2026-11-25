@@ -14,7 +14,7 @@ The sandbox preview binds to `0.0.0.0` and accepts `*.e2b.app` for development. 
 
 ## Build and local program tests
 
-Install Rust, Solana CLI **1.18.26**, Anchor CLI **0.30.1**, and the root npm dependencies. Run from the repository root:
+Install Rust (use **1.79.0** when installing the locked Anchor CLI, whose time 0.3.29 dependency predates Rust 1.80), Solana CLI **1.18.26**, Anchor CLI **0.30.1**, and the root npm dependencies. Run from the repository root:
 
 ```sh
 anchor build
@@ -65,14 +65,16 @@ npx ts-node --project programs/trustlayer_escrow/tsconfig.json scripts/rotate-au
 
 This script is for ordinary local signers; multisig deployments must construct the equivalent instruction through their multisig tooling. Protect the upgrade authority separately. Rotation changes the arbitrator for existing escrows; publicize and audit this governance power.
 
-## Optional Supabase schema
+## Deployed Supabase workspace
 
-Requires Docker and the Supabase CLI:
+See `docs/supabase-deployment.md` for the actual project, migration versions and service checks. The selected backend is already deployed; **do not reset its database**. The public frontend defaults are included in code so a reviewed Vercel deployment can connect without a service key.
 
-```sh
-supabase start
-supabase db reset
-supabase test db
-```
+For a separate staging project: apply the five canonical migrations in order, enable native Solana Web3 authentication, configure an exact site URL and allowed redirect URLs, deploy the two Edge Function directories, and set the staging public URL/publishable key in the frontend. `trustlayer-verify-wallet` must keep its explicit server-side `auth.getUser` check even though gateway `verify_jwt` is false. Supabase injects the server runtime secrets; never copy them into the web bundle.
 
-For a remote project, apply migrations using your secured CLI connection. The second migration revokes sensitive writes and adds constraints; pre-existing invalid records or duplicate primary wallets must be reviewed before applying it. Signup is disabled in the local template because this release is wallet-first. Do not enable an account-based product until authenticated backend functions, storage controls and row-isolation tests are implemented.
+Use `supabase db reset` only on a disposable local development database. Migration filenames now match the live project's recorded versions. Existing databases using the two old scaffold filenames need migration-history reconciliation before any push.
+
+## Vercel production promotion
+
+The owner-provided URL is still the original scaffold at inspection. A commit on `arena/d13247ec-trustlayer` may produce a preview; it does not automatically promote that preview to production. Connect Vercel in Arena or have the project owner deploy/promote this reviewed branch using the existing Vercel project. Do not assume that a successful Git push means the production URL changed.
+
+After promotion, complete the two-account acceptance plan in `docs/supabase-deployment.md`: native wallet sign-in, ownership link, proposal/acceptance, private file upload/download, unauthorized access denial and session expiration. Email SMTP, CAPTCHA/abuse controls, storage retention/scanning and support operations are separate operator setup tasks. No mainnet activation is provided.

@@ -14,7 +14,7 @@ const content = {
     },
     {
       title: "Operational limitations",
-      text: "The app does not provide insurance, private evidence hosting, a staffed case-management service or guaranteed recovery. Deadlines do not automatically refund funds. Account rent and accidentally deposited vault surplus are not recoverable through this release.",
+      text: "The app does not provide insurance, a staffed case-management service or guaranteed recovery. Deadlines do not automatically refund funds. Account rent and accidentally deposited vault surplus are not recoverable through this release.",
     },
     {
       title: "Asset risk",

@@ -7,7 +7,7 @@ export function SiteFooter() {
   return (
     <footer className="marketing-footer">
       <strong>trustlayer.</strong>
-      <span>Wallet-first escrow · Test networks only · Unaudited</span>
+      <span>Private workspace · Escrow activation pending</span>
       <nav>
         <Link href="/privacy">Privacy</Link>
         <Link href="/terms">Terms</Link>

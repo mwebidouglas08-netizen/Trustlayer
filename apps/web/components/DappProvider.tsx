@@ -24,6 +24,7 @@ type Notice = {
   error?: boolean;
 };
 type DappContext = {
+  wallet: BrowserWallet | null;
   address: string | null;
   client: EscrowClient | null;
   escrows: Escrow[];
@@ -181,6 +182,7 @@ export function DappProvider({ children }: { children: ReactNode }) {
   return (
     <Context.Provider
       value={{
+        wallet,
         address,
         client,
         escrows,

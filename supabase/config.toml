@@ -8,11 +8,18 @@ max_rows = 1000
 [db]
 port = 54322
 shadow_port = 54320
-major_version = 15
+major_version = 17
 [studio]
 enabled = true
 port = 54323
 [auth]
 enabled = true
 site_url = "http://localhost:3000"
-enable_signup = false
+enable_signup = true
+
+[functions.trustlayer-verify-wallet]
+# Gateway JWT verification is off for publishable-key compatibility.
+# The handler explicitly validates the bearer JWT with auth.getUser BEFORE privileged access.
+verify_jwt = false
+[functions.trustlayer-health]
+verify_jwt = false

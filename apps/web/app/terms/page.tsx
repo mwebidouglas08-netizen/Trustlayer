@@ -14,7 +14,7 @@ const content = {
     },
     {
       title: "Settlement and limits",
-      text: "The configured program governs token movement; disputes rely on the current arbitrator. No staffed arbitration SLA, appeals process, automatic refund or support guarantee is provided by this release.",
+      text: "The configured program governs token movement; disputes rely on the current arbitrator. Private document storage does not provide a staffed arbitration SLA, appeals process, automatic refund or support guarantee.",
     },
     {
       title: "Production requirements",

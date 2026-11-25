@@ -18,6 +18,7 @@ export function SiteHeader() {
         <Link href="/security">Security</Link>
         <Link href="/fees">Fees</Link>
         <Link href="/app/help">Resources</Link>
+        <Link href="/app/profile">Sign in</Link>
       </nav>
       <Link className="btn primary" href="/app">
         Open app <ArrowUpRight size={16} />

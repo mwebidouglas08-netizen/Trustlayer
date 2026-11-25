@@ -10,7 +10,9 @@
 - [ ] Provide an actual staffed arbitration/evidence channel, response SLA, escalation policy and legal-reviewed disclosures before offering protection to users.
 - [ ] Define account-rent, accidental vault deposits, permanently unavailable arbitrator and disaster-recovery policies.
 - [ ] Configure production RPC quotas, shared rate limiting, independent chain reconciliation and service alerts.
-- [ ] If introducing backend auth/evidence: add server session/role checks, wallet challenges, participant RLS tests, private storage policies and retention/deletion processes.
+- [x] Deploy account auth, expiring wallet challenges, participant RLS, private storage and live database permission checks.
+- [ ] Complete real-wallet browser authentication and actual file upload/download acceptance tests after Vercel promotion.
+- [ ] Publish retention/deletion procedures; implement malware scanning, distributed storage/abuse quotas and backup recovery.
 - [ ] Reconcile public copy with deployed functionality; never advertise planned security guarantees as implemented.
 - [ ] Review accessibility, browser wallet compatibility, slow/rejected signatures and mobile signing end-to-end.
 - [ ] Legal approval and explicit audit-backed decision before a separately reviewed mainnet-enablement change.
