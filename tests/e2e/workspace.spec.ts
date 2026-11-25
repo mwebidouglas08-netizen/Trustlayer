@@ -141,3 +141,45 @@ test("private agreement URLs do not reveal content to anonymous visitors", async
     page.getByRole("button", { name: "Accept these terms" }),
   ).toHaveCount(0);
 });
+
+test("wallet disconnect clears stale provider identity", async ({ page }) => {
+  await page.addInitScript(() => {
+    const listeners: Record<string, () => void> = {};
+    const key = {
+      toBase58: () => "11111111111111111111111111111111",
+      equals: () => true,
+    };
+    Object.assign(window, {
+      phantom: {
+        solana: {
+          publicKey: key,
+          connect: async () => ({ publicKey: key }),
+          on: (event: string, fn: () => void) => {
+            listeners[event] = fn;
+          },
+          removeListener: (event: string) => {
+            delete listeners[event];
+          },
+        },
+      },
+      testDisconnect: () => listeners.disconnect?.(),
+    });
+  });
+  await page.goto("/app/profile");
+  await page
+    .getByRole("button", { name: "Connect wallet", exact: true })
+    .last()
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Sign in with Solana" }),
+  ).toBeVisible();
+  await page.evaluate(() =>
+    (window as unknown as { testDisconnect: () => void }).testDisconnect(),
+  );
+  await expect(
+    page.getByRole("button", { name: "Sign in with Solana" }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Connect wallet", exact: true }).last(),
+  ).toBeVisible();
+});

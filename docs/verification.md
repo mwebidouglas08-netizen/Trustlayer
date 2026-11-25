@@ -40,3 +40,7 @@ The previous commit's GitHub workflow failed at Anchor CLI installation, externa
 `npm audit --omit=dev` reports **12 advisory entries: 5 high and 7 moderate**, in the Anchor/Solana dependency family. No new Supabase advisory entries were reported in this check. See `SECURITY.md`; a successful web build is not a clean security audit.
 
 See `docs/supabase-deployment.md` for exact cloud inventory and authentication settings. A healthy database is not certification of a production financial service.
+
+## Wallet reliability follow-up
+
+Connection requests are now serialized; stale responses after disconnect are ignored, and disconnect events clear local identity even if the provider still exposes its old public key. The account screen offers explicit wallet choice when both supported providers are installed. Latest local verification: lint/typecheck/build, 16 unit tests, 18 desktop/mobile browser regressions and contract TypeScript checks passed. The new disconnect regression uses a test provider; real-wallet signup and file acceptance are still outstanding. Live Supabase checks again reported Auth/DB/REST/Storage healthy, signup enabled and Solana auth enabled. See `launch-walkthrough.md` for the operator sequence and exact Vercel variables. No new contract deployment occurred.
