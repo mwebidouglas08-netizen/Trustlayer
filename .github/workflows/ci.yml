@@ -99,13 +99,16 @@ jobs:
         run: |
           mkdir -p "$HOME/.config/solana"
           solana-keygen new --no-bip39-passphrase --silent --outfile "$HOME/.config/solana/trustlayer-localnet.json"
+      - name: Configure disposable Localnet program identity before compilation
+        run: |
+          node --test scripts/ci-localnet-identity.test.mjs
+          mkdir -p target/deploy
+          solana-keygen new --no-bip39-passphrase --silent --outfile target/deploy/trustlayer_escrow-keypair.json
+          node scripts/ci-localnet-identity.mjs --configure
       - name: Build isolated SBF test program
         run: anchor build
-      - name: Synchronize ephemeral test identity and rebuild
-        run: |
-          # Runner-only identity: no network deployment or source push occurs.
-          anchor keys sync
-          anchor build
+      - name: Verify compiled IDL and Localnet identity alignment
+        run: node scripts/ci-localnet-identity.mjs --verify
       - name: Run fresh local-validator security and lifecycle tests
         run: anchor test --skip-build
       - name: Run host Rust tests
