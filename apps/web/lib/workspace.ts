@@ -46,11 +46,23 @@ export function validateEvidence(file: {
   if (file.name.length > 180)
     throw new Error("Shorten the filename to 180 characters or fewer.");
 }
-export function normalizeSignature(
-  value: Uint8Array | { signature: Uint8Array },
-): Uint8Array {
-  const bytes = value instanceof Uint8Array ? value : value.signature;
-  if (!(bytes instanceof Uint8Array) || bytes.length !== 64)
+export function normalizeSignature(value: unknown): Uint8Array {
+  // Wallet extensions can return typed arrays from another browser realm.
+  const bytes = ArrayBuffer.isView(value)
+    ? value
+    : value && typeof value === "object" && "signature" in value
+      ? value.signature
+      : null;
+  if (
+    !ArrayBuffer.isView(bytes) ||
+    Object.prototype.toString.call(bytes) !== "[object Uint8Array]" ||
+    bytes.byteLength !== 64
+  )
     throw new Error("Wallet returned an invalid Ed25519 signature.");
-  return bytes;
+  if (bytes instanceof Uint8Array) return bytes;
+  return new Uint8Array(
+    bytes.buffer,
+    bytes.byteOffset,
+    bytes.byteLength,
+  ).slice();
 }
