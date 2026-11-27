@@ -15,6 +15,8 @@ import {
   Escrow,
   EscrowClient,
 } from "@/lib/escrow";
+import { MobileWalletDialog } from "./MobileWalletDialog";
+import { isMobileWalletBrowser } from "@/lib/mobile-wallet";
 import { explorer } from "@/lib/solana/cluster";
 
 type Notice = {
@@ -47,6 +49,7 @@ export function useDapp() {
   return value;
 }
 export function DappProvider({ children }: { children: ReactNode }) {
+  const [mobileChooser, setMobileChooser] = useState(false);
   const [wallet, setWallet] = useState<BrowserWallet | null>(null);
   const [address, setAddress] = useState<string | null>(null);
   const [client, setClient] = useState<EscrowClient | null>(null);
@@ -146,6 +149,14 @@ export function DappProvider({ children }: { children: ReactNode }) {
       const selected = (
         name ? options.find((w) => w.name === name) : options[0]
       )?.wallet;
+      if (
+        !selected &&
+        isMobileWalletBrowser(navigator.userAgent) &&
+        window.location.protocol === "https:"
+      ) {
+        setMobileChooser(true);
+        return;
+      }
       if (!selected)
         throw new Error(
           "Install Phantom or Solflare, or open this app in your wallet’s browser. Never enter a seed phrase here.",
@@ -235,6 +246,9 @@ export function DappProvider({ children }: { children: ReactNode }) {
       }}
     >
       {children}
+      {mobileChooser && (
+        <MobileWalletDialog onClose={() => setMobileChooser(false)} />
+      )}
     </Context.Provider>
   );
 }
