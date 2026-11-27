@@ -13,6 +13,7 @@ const allowed = new Set([
   "getMinimumBalanceForRentExemption",
   "getVersion",
   "getHealth",
+  "getSlot",
   "getGenesisHash",
 ]);
 export function validRpcRequest(payload: unknown, programId?: string): boolean {

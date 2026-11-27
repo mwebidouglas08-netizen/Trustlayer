@@ -93,6 +93,7 @@ test("RPC rejects unsupported methods without reaching an upstream", async ({
   request,
 }) => {
   const result = await request.post("/api/rpc", {
+    timeout: 5000,
     data: { jsonrpc: "2.0", id: 1, method: "requestAirdrop", params: [] },
   });
   expect(result.status()).toBe(400);

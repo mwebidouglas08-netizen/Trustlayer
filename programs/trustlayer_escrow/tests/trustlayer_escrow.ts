@@ -44,7 +44,25 @@ describe("escrow security and lifecycle", () => {
     }
     assert.isTrue(rejected, "unauthorized or invalid instruction must fail");
   }
-  async function create(deadline = Math.floor(Date.now() / 1000) + 3600) {
+  async function chainTime(): Promise<number> {
+    const clock = await connection.getAccountInfo(
+      anchor.web3.SYSVAR_CLOCK_PUBKEY,
+      "confirmed",
+    );
+    if (!clock || clock.data.length < 40)
+      throw new Error("Solana Clock sysvar unavailable");
+    return Number(clock.data.readBigInt64LE(32));
+  }
+  async function waitPast(deadline: number) {
+    // Wall time bounds the test, but only chain time establishes expiration.
+    for (let attempt = 0; attempt < 120; attempt++) {
+      if ((await chainTime()) > deadline) return;
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+    throw new Error("Validator Clock did not advance past escrow deadline");
+  }
+  async function create(deadline?: number) {
+    deadline ??= (await chainTime()) + 3600;
     const id = randomBytes(32);
     const [escrow] = anchor.web3.PublicKey.findProgramAddressSync(
       [Buffer.from("escrow"), id],
@@ -330,13 +348,11 @@ describe("escrow security and lifecycle", () => {
     assert.equal((await getAccount(connection, row.vault)).amount, 0n);
   });
   it("allows seller escalation after deadline and rejects expired funding", async () => {
-    const deadline = Math.floor(Date.now() / 1000) + 20;
+    const deadline = (await chainTime()) + 20;
     const row = await create(deadline);
     const expired = await create(deadline);
     await program.methods.fundEscrow().accountsStrict(funding(row)).rpc();
-    await new Promise((resolve) =>
-      setTimeout(resolve, Math.max(0, deadline * 1000 - Date.now()) + 4000),
-    );
+    await waitPast(deadline);
     await fails(
       program.methods.fundEscrow().accountsStrict(funding(expired)).rpc(),
     );

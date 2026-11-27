@@ -1,8 +1,4 @@
-export type SolanaCluster =
-  | "localnet"
-  | "devnet"
-  | "testnet"
-  | "mainnet-beta";
+export type SolanaCluster = "localnet" | "devnet" | "testnet" | "mainnet-beta";
 
 export const SOLANA_GENESIS_HASHES: Record<SolanaCluster, string> = {
   localnet: "FyA1GKUaJFGhD9nGvgeNA7KTurYfKUzxgnCpjZR4cTUg",
@@ -11,7 +7,9 @@ export const SOLANA_GENESIS_HASHES: Record<SolanaCluster, string> = {
   "mainnet-beta": "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
 };
 
-export function getSolanaCluster(nodeEnv = process.env.NODE_ENV): SolanaCluster {
+export function getSolanaCluster(
+  nodeEnv = process.env.NODE_ENV,
+): SolanaCluster {
   const cluster = process.env.NEXT_PUBLIC_SOLANA_CLUSTER || "devnet";
 
   if (

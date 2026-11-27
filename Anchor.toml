@@ -21,6 +21,6 @@ wallet = "~/.config/solana/trustlayer-localnet.json"
 test = "npx ts-mocha -p programs/trustlayer_escrow/tsconfig.json -t 1000000 programs/trustlayer_escrow/tests/**/*.ts"
 
 [test]
-startup_wait = 20000
+startup_wait = 60000
 shutdown_wait = 2000
 upgradeable = true

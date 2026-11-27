@@ -51,7 +51,6 @@ function useTransactionSyncRetry() {
   }, [accessToken]);
 }
 
-
 function download(name: string, text: string) {
   const url = URL.createObjectURL(
     new Blob([text], { type: "application/json" }),
@@ -67,8 +66,9 @@ export function NewTransaction() {
   useTransactionSyncRetry();
 
   const [title, setTitle] = useState("");
-  const [transactionType, setTransactionType] =
-    useState<"goods" | "service">("service");
+  const [transactionType, setTransactionType] = useState<"goods" | "service">(
+    "service",
+  );
   const [seller, setSeller] = useState("");
   const [amount, setAmount] = useState("");
   const [deadline, setDeadline] = useState("");
@@ -309,7 +309,9 @@ export function NewTransaction() {
                   </div>
                   <div>
                     <dt>Type</dt>
-                    <dd>{transactionType === "goods" ? "Goods" : "Services"}</dd>
+                    <dd>
+                      {transactionType === "goods" ? "Goods" : "Services"}
+                    </dd>
                   </div>
                   <div>
                     <dt>Seller</dt>

@@ -46,7 +46,9 @@ export function BackendStatus() {
             {loading
               ? "Checking the deployed backend…"
               : error ||
-                `Last checked ${new Date(status?.checkedAt || Date.now()).toLocaleTimeString()}`}
+                (status?.checkedAt
+                  ? `Last checked ${new Date(status.checkedAt).toLocaleTimeString()}`
+                  : "Backend readiness not yet verified.")}
           </p>
         </div>
       </div>

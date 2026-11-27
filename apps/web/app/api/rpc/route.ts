@@ -43,7 +43,10 @@ export async function POST(request: NextRequest) {
         localRpc !== "http://localhost:8899")
     ) {
       return NextResponse.json(
-        { error: "Localnet is only available through the local development server." },
+        {
+          error:
+            "Localnet is only available through the local development server.",
+        },
         { status: 503 },
       );
     }

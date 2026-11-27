@@ -18,9 +18,8 @@ jobs:
       - run: npx tsc --noEmit -p programs/trustlayer_escrow/tsconfig.json
       - name: Browser regression checks
         run: |
-          npm start > /tmp/trustlayer-web.log 2>&1 &
-          npx wait-on http://localhost:3000/api/health
-          npm run test:e2e:sandbox
+          npx playwright install --with-deps chromium
+          npm run test:e2e
       - name: Record dependency advisories (tracked release risks)
         if: always()
         run: npm audit --omit=dev --json > dependency-audit.json || true

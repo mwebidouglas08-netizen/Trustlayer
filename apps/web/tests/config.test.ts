@@ -22,15 +22,11 @@ test("network parsing validates supported clusters", () => {
     assert.equal(getSolanaCluster("development"), "testnet");
 
     process.env.NEXT_PUBLIC_SOLANA_CLUSTER = "mainnet";
-    assert.throws(
-      () => getSolanaCluster("development"),
-      /Invalid/,
-    );
+    assert.throws(() => getSolanaCluster("development"), /Invalid/);
   } finally {
     if (previousCluster === undefined)
       delete process.env.NEXT_PUBLIC_SOLANA_CLUSTER;
-    else
-      process.env.NEXT_PUBLIC_SOLANA_CLUSTER = previousCluster;
+    else process.env.NEXT_PUBLIC_SOLANA_CLUSTER = previousCluster;
   }
 });
 
@@ -47,15 +43,11 @@ test("Localnet is accepted only in development", () => {
       /cluster=custom/,
     );
 
-    assert.throws(
-      () => getSolanaCluster("production"),
-      /development/,
-    );
+    assert.throws(() => getSolanaCluster("production"), /development/);
   } finally {
     if (previousCluster === undefined)
       delete process.env.NEXT_PUBLIC_SOLANA_CLUSTER;
-    else
-      process.env.NEXT_PUBLIC_SOLANA_CLUSTER = previousCluster;
+    else process.env.NEXT_PUBLIC_SOLANA_CLUSTER = previousCluster;
   }
 });
 

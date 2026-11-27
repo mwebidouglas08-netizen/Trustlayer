@@ -61,10 +61,7 @@ function readQueue(): PendingTransactionSync[] {
 }
 
 function writeQueue(items: PendingTransactionSync[]) {
-  localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify(items.slice(-MAX_PENDING)),
-  );
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(items.slice(-MAX_PENDING)));
 }
 
 export function enqueueTransactionSync(
@@ -88,27 +85,25 @@ export function flushPendingTransactionSync(): Promise<void> {
   if (activeFlush) return activeFlush;
 
   activeFlush = (async () => {
-    const { data, error: sessionError } =
-      await backend().auth.getSession();
+    const { data, error: sessionError } = await backend().auth.getSession();
 
     if (sessionError || !data.session) return;
 
     let queue = readQueue();
 
     for (const item of queue) {
-      const { data: result, error } =
-        await backend().functions.invoke(
-          "trustlayer-sync-transaction",
-          {
-            body: {
-              signature: item.signature,
-              cluster: item.cluster,
-              action: item.action,
-              escrowAddress: item.escrowAddress,
-              ...(item.metadata ? { metadata: item.metadata } : {}),
-            },
+      const { data: result, error } = await backend().functions.invoke(
+        "trustlayer-sync-transaction",
+        {
+          body: {
+            signature: item.signature,
+            cluster: item.cluster,
+            action: item.action,
+            escrowAddress: item.escrowAddress,
+            ...(item.metadata ? { metadata: item.metadata } : {}),
           },
-        );
+        },
+      );
 
       if (error || result?.synced !== true) {
         console.warn(
@@ -118,9 +113,8 @@ export function flushPendingTransactionSync(): Promise<void> {
         break;
       }
 
-      queue = queue.filter(
-        (entry) => entry.signature !== item.signature,
-      );
+      // Re-read after awaiting the network: another transaction may have been queued.
+      queue = readQueue().filter((entry) => entry.signature !== item.signature);
 
       writeQueue(queue);
     }
