@@ -2307,3 +2307,23 @@ body {
 .sidebar-bottom {
   flex-shrink: 0;
 }
+
+.mobile-wallet-dialog {
+  width: min(440px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 24px;
+  color: var(--ink);
+  background: white;
+}
+.mobile-wallet-dialog::backdrop {
+  background: rgb(0 0 0 / 55%);
+}
+.mobile-wallet-dialog p {
+  line-height: 1.6;
+}
+.mobile-wallet-dialog .btn {
+  min-height: 48px;
+}
