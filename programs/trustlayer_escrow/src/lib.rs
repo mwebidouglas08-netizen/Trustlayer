@@ -1,7 +1,8 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, TransferChecked};
+use crate::program::TrustlayerEscrow;
 
-declare_id!("TRusT11111111111111111111111111111111111111");
+declare_id!("7v6PxWejvNneG5TwZSntgj5ZjV6sgLSengjkVsct6V2G");
 
 /// Maximum platform fee: 1%. Existing escrows snapshot their fee.
 pub const MAX_FEE_BPS: u16 = 100;
@@ -301,7 +302,7 @@ pub struct RotateAuthorities<'info> {
 #[derive(Accounts)]
 pub struct InitializeConfig<'info> {
     #[account(constraint = program.programdata_address()? == Some(program_data.key()) @ EscrowError::Unauthorized)]
-    pub program: Program<'info, crate::program::TrustlayerEscrow>,
+    pub program: Program<'info, TrustlayerEscrow>,
     #[account(constraint = program_data.upgrade_authority_address == Some(authority.key()) @ EscrowError::Unauthorized)]
     pub program_data: Account<'info, ProgramData>,
     pub mint: Account<'info, Mint>,
@@ -519,7 +520,6 @@ pub struct CancelUnfunded<'info> {
 #[derive(InitSpace)]
 pub struct Config {
     pub authority: Pubkey,
-    #[account(address = escrow.mint @ EscrowError::InvalidMint)]
     pub usdc_mint: Pubkey,
     pub fee_bps: u16,
     pub fee_recipient: Pubkey,

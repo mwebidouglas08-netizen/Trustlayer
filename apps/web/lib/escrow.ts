@@ -16,7 +16,10 @@ import {
 } from "@solana/spl-token";
 import { Buffer } from "buffer";
 import { Action, agreementText, parseAmount } from "./protocol";
-import { getSolanaCluster } from "./solana/cluster";
+import {
+  getSolanaCluster,
+  SOLANA_GENESIS_HASHES,
+} from "./solana/cluster";
 
 export interface BrowserWallet {
   signMessage?(
@@ -146,10 +149,9 @@ export class EscrowClient {
       "confirmed",
     );
     const genesis = await connection.getGenesisHash();
-    const expected =
-      getSolanaCluster() === "devnet"
-        ? "EtWTRABZaYq6iMfeYKouRu166VU2xqa1"
-        : "4uhcVJyU9pJkvQyS88uRDiswHXSCkY3zQawwpjk2NsNY";
+    const cluster = getSolanaCluster();
+
+    const expected = SOLANA_GENESIS_HASHES[cluster];
     if (genesis !== expected)
       throw new Error(
         "RPC network does not match the configured cluster. Signing is disabled.",
