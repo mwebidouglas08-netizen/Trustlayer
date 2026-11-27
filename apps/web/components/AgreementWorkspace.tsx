@@ -1,5 +1,7 @@
 "use client";
 import Link from "next/link";
+import { FileExport } from "./FileExport";
+import { EvidenceDownload } from "./EvidenceDownload";
 import { useRouter } from "next/navigation";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { PublicKey } from "@solana/web3.js";
@@ -8,7 +10,6 @@ import {
   ArrowUpRight,
   CheckCircle2,
   Copy,
-  Download,
   FileText,
   FolderLock,
   Plus,
@@ -589,17 +590,6 @@ export function AgreementDetail({ id }: { id: string }) {
       );
     setMessage("File stored privately and added to the agreement record.");
   }
-  async function downloadFile(file: AgreementFile) {
-    const { data, error } = await backend()
-      .storage.from("trustlayer-evidence")
-      .createSignedUrl(file.storage_path, 60, { download: file.filename });
-    if (error) throw error;
-    if (!data?.signedUrl) throw new Error("No download URL returned.");
-    const link = document.createElement("a");
-    link.href = data.signedUrl;
-    link.rel = "noreferrer";
-    link.click();
-  }
   if (!session)
     return (
       <section className="panel">
@@ -721,24 +711,11 @@ export function AgreementDetail({ id }: { id: string }) {
                   <Copy size={15} />
                   Copy private link
                 </button>
-                <button
-                  className="btn secondary"
-                  onClick={() => {
-                    const url = URL.createObjectURL(
-                      new Blob([JSON.stringify(row, null, 2)], {
-                        type: "application/json",
-                      }),
-                    );
-                    const link = document.createElement("a");
-                    link.href = url;
-                    link.download = `agreement-${id}.json`;
-                    link.click();
-                    setTimeout(() => URL.revokeObjectURL(url), 1000);
-                  }}
-                >
-                  <Download size={15} />
-                  Export record
-                </button>
+                <FileExport
+                  name={`agreement-${id}.json`}
+                  data={JSON.stringify(row, null, 2)}
+                  label="Export record"
+                />
               </div>
             </section>
             <aside className="panel form-panel">
@@ -884,14 +861,10 @@ export function AgreementDetail({ id }: { id: string }) {
                         {new Date(f.created_at).toLocaleDateString()}
                       </small>
                     </div>
-                    <button
-                      className="btn secondary"
-                      disabled={busy}
-                      onClick={() => void run(() => downloadFile(f))}
-                    >
-                      <Download size={14} />
-                      Download
-                    </button>
+                    <EvidenceDownload
+                      key={`${session.user.id}:${f.id}`}
+                      file={f}
+                    />
                   </li>
                 ))}
               </ul>
@@ -900,7 +873,8 @@ export function AgreementDetail({ id }: { id: string }) {
                 <h3>No files shared yet</h3>
                 <p>
                   Add specifications, delivery notes, or supporting documents.
-                  Downloads use short-lived private links.
+                  Downloads require authenticated agreement access. Prepare a
+                  file, then save or share it.
                 </p>
               </div>
             )}
