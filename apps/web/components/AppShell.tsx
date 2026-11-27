@@ -41,7 +41,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   const account = useAccount();
   return (
     <div className="app-shell">
-      <aside className={`sidebar ${menu ? "open" : ""}`}>
+      <aside
+        className={`sidebar ${menu ? "open" : ""}`}
+        onClick={(event) => {
+          if ((event.target as HTMLElement).closest("a")) setMenu(false);
+        }}
+      >
         <Link href="/" className="brand">
           <span className="brand-mark">
             <ShieldCheck size={21} />

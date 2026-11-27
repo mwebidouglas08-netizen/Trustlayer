@@ -2298,3 +2298,12 @@ body {
     min-height: unset;
   }
 }
+
+/* Keep lower mobile navigation reachable without scrolling the page underneath. */
+.sidebar {
+  overscroll-behavior: contain;
+}
+.sidebar > nav,
+.sidebar-bottom {
+  flex-shrink: 0;
+}

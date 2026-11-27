@@ -16,7 +16,7 @@ import {
 } from "@solana/spl-token";
 import { Buffer } from "buffer";
 import { Action, agreementText, parseAmount } from "./protocol";
-import { getSolanaCluster } from "./solana/cluster";
+import { getSolanaCluster, SOLANA_GENESIS_HASHES } from "./solana/cluster";
 
 export interface BrowserWallet {
   signMessage?(
@@ -146,10 +146,9 @@ export class EscrowClient {
       "confirmed",
     );
     const genesis = await connection.getGenesisHash();
-    const expected =
-      getSolanaCluster() === "devnet"
-        ? "EtWTRABZaYq6iMfeYKouRu166VU2xqa1"
-        : "4uhcVJyU9pJkvQyS88uRDiswHXSCkY3zQawwpjk2NsNY";
+    const cluster = getSolanaCluster();
+
+    const expected = SOLANA_GENESIS_HASHES[cluster];
     if (genesis !== expected)
       throw new Error(
         "RPC network does not match the configured cluster. Signing is disabled.",
@@ -164,13 +163,37 @@ export class EscrowClient {
       { commitment: "confirmed" },
     );
     const id = new PublicKey(process.env.NEXT_PUBLIC_TRUSTLAYER_PROGRAM_ID!);
+    const deployed = await connection.getAccountInfo(id, "confirmed");
+    if (
+      !deployed?.executable ||
+      !deployed.owner.equals(
+        new PublicKey("BPFLoaderUpgradeab1e11111111111111111111111"),
+      )
+    )
+      throw new Error(
+        "Configured escrow program is not an executable upgradeable deployment.",
+      );
     const idl = await Program.fetchIdl(id, provider);
     if (!idl || idl.address !== id.toBase58())
       throw new Error(
         "Published program IDL is missing or does not match the configured program.",
       );
     const program = new Program(idl, provider);
-    if (!program.methods.setPaused || !program.methods.rotateAuthorities)
+    if (
+      [
+        "initializeConfig",
+        "setPaused",
+        "rotateAuthorities",
+        "createEscrow",
+        "fundEscrow",
+        "markDeliverySubmitted",
+        "releaseToSeller",
+        "openDispute",
+        "resolveDisputeRefundBuyer",
+        "resolveDisputePaySeller",
+        "cancelUnfunded",
+      ].some((name) => !program.methods[name])
+    )
       throw new Error(
         "Deployment is running an incompatible escrow version. Upgrade the program and publish the current IDL.",
       );

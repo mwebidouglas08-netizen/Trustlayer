@@ -22,6 +22,34 @@ import {
 } from "@/lib/protocol";
 import { Escrow } from "@/lib/escrow";
 import { explorer, getSolanaCluster } from "@/lib/solana/cluster";
+import { useAccount } from "./AccountProvider";
+import {
+  enqueueTransactionSync,
+  flushPendingTransactionSync,
+  SyncAction,
+} from "@/lib/transaction-sync";
+
+function useTransactionSyncRetry() {
+  const { session } = useAccount();
+  const accessToken = session?.access_token;
+
+  useEffect(() => {
+    if (!accessToken) return;
+
+    const retry = () => {
+      void flushPendingTransactionSync();
+    };
+
+    retry();
+    window.addEventListener("focus", retry);
+    window.addEventListener("online", retry);
+
+    return () => {
+      window.removeEventListener("focus", retry);
+      window.removeEventListener("online", retry);
+    };
+  }, [accessToken]);
+}
 
 function download(name: string, text: string) {
   const url = URL.createObjectURL(
@@ -35,6 +63,12 @@ function download(name: string, text: string) {
 }
 export function NewTransaction() {
   const d = useDapp();
+  useTransactionSyncRetry();
+
+  const [title, setTitle] = useState("");
+  const [transactionType, setTransactionType] = useState<"goods" | "service">(
+    "service",
+  );
   const [seller, setSeller] = useState("");
   const [amount, setAmount] = useState("");
   const [deadline, setDeadline] = useState("");
@@ -77,6 +111,27 @@ export function NewTransaction() {
     );
     if (result) {
       setResult(result);
+
+      try {
+        enqueueTransactionSync({
+          signature: result.signature,
+          cluster: "devnet",
+          action: "create_escrow",
+          escrowAddress: result.address,
+          metadata: {
+            title: title.trim(),
+            transactionType,
+          },
+        });
+
+        await flushPendingTransactionSync();
+      } catch (syncError) {
+        console.error("Could not queue creation synchronization:", syncError);
+        d.notify(
+          "Escrow created on-chain. History synchronization is pending; keep this browser data.",
+        );
+      }
+
       try {
         localStorage.setItem(
           `trustlayer:${getSolanaCluster()}:${result.address}`,
@@ -155,6 +210,28 @@ export function NewTransaction() {
             {!review ? (
               <form onSubmit={next} className="form-stack">
                 <label>
+                  Transaction title
+                  <input
+                    required
+                    maxLength={120}
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="What is this agreement for?"
+                  />
+                </label>
+                <label>
+                  Transaction type
+                  <select
+                    value={transactionType}
+                    onChange={(e) =>
+                      setTransactionType(e.target.value as "goods" | "service")
+                    }
+                  >
+                    <option value="goods">Goods</option>
+                    <option value="service">Services</option>
+                  </select>
+                </label>
+                <label>
                   Seller wallet address
                   <input
                     required
@@ -226,6 +303,16 @@ export function NewTransaction() {
               <div className="form-stack">
                 <h2>Check every detail before signing.</h2>
                 <dl className="detail-list">
+                  <div>
+                    <dt>Transaction</dt>
+                    <dd>{title}</dd>
+                  </div>
+                  <div>
+                    <dt>Type</dt>
+                    <dd>
+                      {transactionType === "goods" ? "Goods" : "Services"}
+                    </dd>
+                  </div>
                   <div>
                     <dt>Seller</dt>
                     <dd className="break-address">{seller}</dd>
@@ -358,6 +445,8 @@ const warnings: Record<Action, string> = {
 };
 export function TransactionDetail({ id }: { id: string }) {
   const d = useDapp();
+  useTransactionSyncRetry();
+
   const [row, setRow] = useState<Escrow | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -457,6 +546,33 @@ export function TransactionDetail({ id }: { id: string }) {
     if (result) {
       setSignature(result);
       setAction(null);
+
+      const syncActions: Record<Action, SyncAction> = {
+        fundEscrow: "fund_escrow",
+        releaseToSeller: "release_to_seller",
+        markDeliverySubmitted: "mark_delivery_submitted",
+        openDispute: "open_dispute",
+        cancelUnfunded: "cancel_unfunded",
+        resolveDisputeRefundBuyer: "resolve_dispute_refund_buyer",
+        resolveDisputePaySeller: "resolve_dispute_pay_seller",
+      };
+
+      try {
+        enqueueTransactionSync({
+          signature: result,
+          cluster: "devnet",
+          action: syncActions[action],
+          escrowAddress: row.address,
+        });
+
+        await flushPendingTransactionSync();
+      } catch (syncError) {
+        console.error("Could not queue action synchronization:", syncError);
+        d.notify(
+          "Solana action confirmed. Transaction history synchronization is pending.",
+        );
+      }
+
       await load();
     }
   }

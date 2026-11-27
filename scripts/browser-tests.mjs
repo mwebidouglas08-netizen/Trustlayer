@@ -11,7 +11,7 @@ await inflate(resolve(packageDir, "../../bin/al2023.tar.br"));
 const executablePath = await chromium.executablePath();
 const result = spawnSync(
   process.execPath,
-  ["node_modules/@playwright/test/cli.js", "test"],
+  ["node_modules/@playwright/test/cli.js", "test", ...process.argv.slice(2)],
   {
     stdio: "inherit",
     env: {

@@ -33,11 +33,29 @@ export async function POST(request: NextRequest) {
       { status: 429, headers: { "Retry-After": "60" } },
     );
   const cluster = process.env.NEXT_PUBLIC_SOLANA_CLUSTER || "devnet";
-  if (cluster !== "devnet" && cluster !== "testnet")
+
+  if (cluster === "localnet") {
+    const localRpc = process.env.SOLANA_RPC_URL;
+
+    if (
+      process.env.NODE_ENV !== "development" ||
+      (localRpc !== "http://127.0.0.1:8899" &&
+        localRpc !== "http://localhost:8899")
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Localnet is only available through the local development server.",
+        },
+        { status: 503 },
+      );
+    }
+  } else if (cluster !== "devnet" && cluster !== "testnet") {
     return NextResponse.json(
       { error: "This release supports test networks only" },
       { status: 503 },
     );
+  }
   try {
     const reader = request.body?.getReader();
     if (!reader)

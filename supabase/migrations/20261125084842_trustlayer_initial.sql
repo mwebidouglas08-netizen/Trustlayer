@@ -1,4 +1,4 @@
-﻿-- TRUSTLAYER initial schema (draft). Review RLS carefully before production.
+-- TRUSTLAYER initial schema (draft). Review RLS carefully before production.
 create extension if not exists "pgcrypto";
 
 create table if not exists public.profiles (

@@ -23,3 +23,7 @@ enable_signup = true
 verify_jwt = false
 [functions.trustlayer-health]
 verify_jwt = false
+
+[functions.trustlayer-sync-transaction]
+# The handler independently validates the Supabase JWT before privileged writes.
+verify_jwt = false
