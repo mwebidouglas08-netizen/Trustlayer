@@ -536,7 +536,14 @@ export function AgreementDetail({ id }: { id: string }) {
     setFiles([]);
     setEvents([]);
     void load();
-    return invalidate;
+    const refresh = () => {
+      if (!lock.current) void load();
+    };
+    window.addEventListener("focus", refresh);
+    return () => {
+      window.removeEventListener("focus", refresh);
+      invalidate();
+    };
   }, [load, invalidate]);
   async function run(task: () => Promise<void>) {
     if (lock.current) return;
@@ -720,6 +727,13 @@ export function AgreementDetail({ id }: { id: string }) {
             </section>
             <aside className="panel form-panel">
               <h2>Move forward, deliberately.</h2>
+              <button
+                className="btn secondary"
+                disabled={busy || loading}
+                onClick={() => void load()}
+              >
+                <RefreshCw size={15} /> Refresh proposal status
+              </button>
               <p className="muted">
                 Sending locks the terms. Acceptance records the verified
                 counterparty’s decision, not delivery or payment.
@@ -763,8 +777,23 @@ export function AgreementDetail({ id }: { id: string }) {
                 )}
                 {row.status === "accepted" && (
                   <div className="notice">
-                    Terms accepted and locked. Escrow payments are not activated
-                    for this deployment.
+                    Terms accepted and locked. Acceptance does not move USDC.
+                    {owner ? (
+                      <p>
+                        <Link
+                          className="btn primary"
+                          href={`/app/agreements/${id}/escrow`}
+                        >
+                          Continue to escrow funding
+                        </Link>
+                      </p>
+                    ) : (
+                      <p>
+                        The buyer must create and fund the on-chain escrow. You
+                        can review escrows naming your connected wallet in
+                        Transactions.
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
