@@ -1,4 +1,5 @@
 "use client";
+import { FileExport } from "./FileExport";
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import {
@@ -6,7 +7,6 @@ import {
   ArrowUpRight,
   CheckCircle2,
   Copy,
-  Download,
   FileCheck2,
   ShieldCheck,
 } from "lucide-react";
@@ -51,16 +51,6 @@ function useTransactionSyncRetry() {
   }, [accessToken]);
 }
 
-function download(name: string, text: string) {
-  const url = URL.createObjectURL(
-    new Blob([text], { type: "application/json" }),
-  );
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = name;
-  link.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
 export function NewTransaction() {
   const d = useDapp();
   useTransactionSyncRetry();
@@ -161,15 +151,11 @@ export function NewTransaction() {
           </p>
           <code className="break-address">{result.address}</code>
           <div className="button-row">
-            <button
-              className="btn secondary"
-              onClick={() =>
-                download(`trustlayer-${result.address}.json`, result.agreement)
-              }
-            >
-              <Download size={16} />
-              Download agreement
-            </button>
+            <FileExport
+              name={`trustlayer-${result.address}.json`}
+              data={result.agreement}
+              label="Download agreement"
+            />
             <Link
               className="btn primary"
               href={`/app/transactions/${result.address}`}
@@ -362,24 +348,19 @@ export function NewTransaction() {
                   >
                     Edit details
                   </button>
-                  <button
-                    className="btn secondary"
-                    onClick={() => {
-                      download(
-                        "trustlayer-agreement.json",
-                        agreementText(
-                          seller.trim(),
-                          parseAmount(amount).toString(),
-                          Math.floor(Date.parse(deadline) / 1000),
-                          terms,
-                        ),
-                      );
-                      setAgreementSaved(true);
-                    }}
-                  >
-                    <Download size={15} />
-                    {agreementSaved ? "Download again" : "Save agreement first"}
-                  </button>
+                  <FileExport
+                    name="trustlayer-agreement.json"
+                    data={agreementText(
+                      seller.trim(),
+                      parseAmount(amount).toString(),
+                      Math.floor(Date.parse(deadline) / 1000),
+                      terms,
+                    )}
+                    label={
+                      agreementSaved ? "Download again" : "Save agreement first"
+                    }
+                    onRequested={() => setAgreementSaved(true)}
+                  />
                   <button
                     className="btn primary"
                     disabled={d.busy || !agreementSaved}
@@ -769,13 +750,11 @@ export function TransactionDetail({ id }: { id: string }) {
                 : "Hash mismatch — do not rely on these terms"}
             </p>
             <pre className="agreement-preview">{agreement}</pre>
-            <button
-              className="btn secondary"
-              onClick={() => download(`trustlayer-${id}.json`, agreement)}
-            >
-              <Download size={15} />
-              Download terms
-            </button>
+            <FileExport
+              name={`trustlayer-${id}.json`}
+              data={agreement}
+              label="Download terms"
+            />
           </>
         )}
       </section>
