@@ -15,6 +15,7 @@ import {
   Escrow,
   EscrowClient,
 } from "@/lib/escrow";
+import { useRouter } from "next/navigation";
 import { MobileWalletDialog } from "./MobileWalletDialog";
 import { isMobileWalletBrowser } from "@/lib/mobile-wallet";
 import { explorer } from "@/lib/solana/cluster";
@@ -49,6 +50,7 @@ export function useDapp() {
   return value;
 }
 export function DappProvider({ children }: { children: ReactNode }) {
+  const router = useRouter();
   const [mobileChooser, setMobileChooser] = useState(false);
   const [wallet, setWallet] = useState<BrowserWallet | null>(null);
   const [address, setAddress] = useState<string | null>(null);
@@ -174,6 +176,9 @@ export function DappProvider({ children }: { children: ReactNode }) {
       setNotices([]);
       setAddress(result.publicKey.toBase58());
       setWallet(selected);
+      setMobileChooser(false);
+      // Stay in the connected browser; do not pretend sessions transfer to Safari.
+      if (!window.location.pathname.startsWith("/app/")) router.push("/app");
     } catch (e) {
       if (attempt === connectionAttempt.current)
         setError(

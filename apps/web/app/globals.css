@@ -2327,3 +2327,15 @@ body {
 .mobile-wallet-dialog .btn {
   min-height: 48px;
 }
+
+.install-app {
+  margin: 24px auto;
+  padding: 16px;
+  max-width: 640px;
+  line-height: 1.6;
+}
+.install-app summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding: 10px;
+}
