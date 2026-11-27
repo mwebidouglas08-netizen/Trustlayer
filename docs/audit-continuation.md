@@ -71,3 +71,13 @@ The continuation is intended for a draft PR from the Arena session branch into m
 4. Complete authenticated Supabase sync tests, including duplicates, concurrent/out-of-order events, wrong user, invalid signature, failed/unconfirmed transactions and finality handling.
 5. Complete test-USDC Devnet lifecycle with operator-controlled buyer/seller/arbitrator wallets. Save public signatures and actual balance deltas.
 6. Review the complete diff and advisory risks; merge only after critical gates pass, then verify Vercel production build and runtime configuration.
+
+## CI error-log follow-up
+
+The supplied contract log confirms host Cargo 1.79 cannot parse the Edition 2024 manifest for locked `getrandom 0.4.3` (via `ahash 0.8.14`). CI now uses current stable Rust for project metadata/host builds and explicitly uses `cargo +1.79.0` only to install Anchor CLI 0.30.1. This addresses the demonstrated host-metadata incompatibility; it does not establish SBF compatibility. Solana 1.18.26's separate platform toolchain may still require a tested compatible dependency graph. No Cargo.lock versions were guessed or hand-edited.
+
+CI also creates its disposable wallet at the path configured by Anchor.toml, rather than the unrelated default id.json. Metadata, initial SBF build, ephemeral local identity synchronization, local-validator execution, and host Rust tests are separate steps so the next failure is identifiable. Tool versions are logged; lockfile drift fails validation. No generated identities are committed or deployed remotely.
+
+The supplied database excerpt contains only Docker image-pull progress, not the terminal error. Its cause is still unknown. Startup output is now captured with pipefail preserved, a short tail and container/disk status are printed on failure, and failed startup output is retained as a seven-day CI artifact. This is for the disposable local CI stack; no hosted project credentials are injected. Database service health checks/tests were not bypassed.
+
+Validation of these workflow edits: YAML parsing, targeted toolchain/failure-propagation assertions, Prettier and git diff checks passed. Actual contract/database execution still requires the new CI result. This follow-up is not a claim of passing runtime tests or production readiness.
