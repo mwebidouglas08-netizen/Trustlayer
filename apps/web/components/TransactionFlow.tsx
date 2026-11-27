@@ -32,12 +32,17 @@ import {
 function useTransactionSyncRetry() {
   const { session } = useAccount();
   const accessToken = session?.access_token;
+  const { notify } = useDapp();
 
   useEffect(() => {
     if (!accessToken) return;
 
     const retry = () => {
-      void flushPendingTransactionSync();
+      void flushPendingTransactionSync().catch(() => {
+        notify(
+          "On-chain receipts are pending Supabase sync. Verify your signing wallet in Profile, then return here to retry. Do not repeat payments.",
+        );
+      });
     };
 
     retry();
@@ -48,7 +53,7 @@ function useTransactionSyncRetry() {
       window.removeEventListener("focus", retry);
       window.removeEventListener("online", retry);
     };
-  }, [accessToken]);
+  }, [accessToken, notify]);
 }
 
 export function NewTransaction() {

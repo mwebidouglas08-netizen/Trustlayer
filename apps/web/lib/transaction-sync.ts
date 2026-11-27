@@ -87,7 +87,11 @@ export function flushPendingTransactionSync(): Promise<void> {
   activeFlush = (async () => {
     const { data, error: sessionError } = await backend().auth.getSession();
 
-    if (sessionError || !data.session) return;
+    if (!readQueue().length) return;
+    if (sessionError || !data.session)
+      throw new Error(
+        "Sign in to your Trustlayer account to synchronize confirmed transactions.",
+      );
 
     let queue = readQueue();
 
@@ -106,11 +110,12 @@ export function flushPendingTransactionSync(): Promise<void> {
       );
 
       if (error || result?.synced !== true) {
-        console.warn(
-          "TrustLayer synchronization remains pending:",
-          error?.message ?? result?.error ?? "Unexpected response",
+        // A confirmed chain receipt is not proof of a successful database mirror.
+        // Keep the queued receipt and report failure to the UI instead of resolving.
+        throw new Error(
+          "On-chain receipt is retained, but Supabase synchronization was not confirmed. " +
+            "Sign in, verify the signing wallet in Profile, and retry synchronization. Do not repeat the payment.",
         );
-        break;
       }
 
       // Re-read after awaiting the network: another transaction may have been queued.

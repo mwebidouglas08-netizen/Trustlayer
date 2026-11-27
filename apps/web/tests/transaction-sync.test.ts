@@ -67,3 +67,53 @@ test("sync acknowledgement preserves transactions queued while the request is in
     ["second"],
   );
 });
+
+test("backend rejection never resolves as synced and retains the real receipt", async () => {
+  const storage = new Map<string, string>();
+  const source = readFileSync(
+    new URL("../lib/transaction-sync.ts", import.meta.url),
+    "utf8",
+  ).replace(/^import .*;\s*$/gm, "");
+  const exports: Record<string, (...args: any[]) => any> = {};
+  runInNewContext(
+    ts.transpileModule(source, {
+      compilerOptions: {
+        target: ts.ScriptTarget.ES2022,
+        module: ts.ModuleKind.CommonJS,
+      },
+    }).outputText,
+    {
+      exports,
+      console,
+      localStorage: {
+        getItem: (k: string) => storage.get(k),
+        setItem: (k: string, v: string) => storage.set(k, v),
+      },
+      backend: () => ({
+        auth: {
+          getSession: async () => ({
+            data: { session: { user: { id: "test" } } },
+          }),
+        },
+        functions: {
+          invoke: async () => ({ data: null, error: { message: "403" } }),
+        },
+      }),
+    },
+  );
+  exports.enqueueTransactionSync({
+    signature: "confirmed-receipt",
+    cluster: "devnet",
+    action: "fund_escrow",
+    escrowAddress: "test-address",
+  });
+  await assert.rejects(
+    exports.flushPendingTransactionSync(),
+    /Do not repeat the payment/,
+  );
+  assert.equal(
+    JSON.parse([...storage.values()][0])[0].signature,
+    "confirmed-receipt",
+  );
+  await assert.rejects(exports.flushPendingTransactionSync(), /not confirmed/);
+});
