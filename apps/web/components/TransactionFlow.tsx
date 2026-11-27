@@ -343,7 +343,9 @@ export function NewTransaction() {
                 <p className="muted">
                   Creation costs SOL for network fees and account rent. It does
                   not move USDC. The seller can escalate to arbitration after
-                  the deadline; refunds are not automatic.
+                  the deadline; refunds are not automatic. Funding must also
+                  complete before this deadline, measured by Solana’s clock.
+                  Allow enough time for wallet approval.
                 </p>
                 <div className="button-row">
                   <button
@@ -433,6 +435,7 @@ export function TransactionDetail({ id }: { id: string }) {
   const d = useDapp();
   useTransactionSyncRetry();
 
+  const [chainTime, setChainTime] = useState<number | null>(null);
   const [row, setRow] = useState<Escrow | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -445,7 +448,12 @@ export function TransactionDetail({ id }: { id: string }) {
     setLoading(true);
     setError("");
     try {
-      setRow(await d.client.fetch(id));
+      const [fresh, time] = await Promise.all([
+        d.client.fetch(id),
+        d.client.chainTime(),
+      ]);
+      setRow(fresh);
+      setChainTime(time);
     } catch {
       setRow(null);
       setError(
@@ -520,7 +528,7 @@ export function TransactionDetail({ id }: { id: string }) {
   const actions = actionsFor(
     row.state,
     role,
-    Date.now() >= row.deadline * 1000,
+    chainTime !== null && chainTime >= row.deadline,
     d.client.config.paused,
   );
   async function execute() {

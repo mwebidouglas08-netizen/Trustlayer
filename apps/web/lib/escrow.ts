@@ -5,6 +5,8 @@ import {
   PublicKey,
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
+  SYSVAR_CLOCK_PUBKEY,
+  SendTransactionError,
   Transaction,
   VersionedTransaction,
 } from "@solana/web3.js";
@@ -15,6 +17,7 @@ import {
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { Buffer } from "buffer";
+import { decodeClockTimestamp, assertFutureDeadline } from "./solana/clock";
 import { Action, agreementText, parseAmount } from "./protocol";
 import { getSolanaCluster, assertRpcCluster } from "./solana/cluster";
 
@@ -265,6 +268,17 @@ export class EscrowClient {
       );
     return decode(key, raw);
   }
+  async chainTime(): Promise<number> {
+    const clock = await this.provider.connection.getAccountInfo(
+      SYSVAR_CLOCK_PUBKEY,
+      "confirmed",
+    );
+    if (!clock)
+      throw new Error(
+        "Unable to read Solana Clock. Signing is disabled until RPC recovers.",
+      );
+    return decodeClockTimestamp(clock.data);
+  }
   async balances() {
     const [sol, tokens] = await Promise.all([
       this.provider.connection.getBalance(this.provider.publicKey),
@@ -298,8 +312,7 @@ export class EscrowClient {
       throw new Error("Use a different, valid seller wallet address.");
     if (!terms.trim() || terms.length > 10000)
       throw new Error("Agreement terms must contain 1–10,000 characters.");
-    if (!Number.isSafeInteger(deadline) || deadline <= Date.now() / 1000)
-      throw new Error("Choose a future delivery deadline.");
+    assertFutureDeadline(deadline, await this.chainTime());
     const amount = parseAmount(amountInput);
     const agreement = agreementText(
       sellerAddress,
@@ -353,10 +366,28 @@ export class EscrowClient {
     } catch {
       /* Download is the durable backup. */
     }
-    const signature = await this.send(new Transaction().add(ix), [vault]);
+    const signature = await this.send(
+      new Transaction().add(ix),
+      [vault],
+      async () => {
+        assertFutureDeadline(deadline, await this.chainTime());
+      },
+    );
     return { signature, address: escrow.toBase58(), agreement };
   }
   async act(action: Action, escrow: Escrow) {
+    // Never authorize funding from a stale page or the device wall clock.
+    escrow = await this.fetch(escrow.address);
+    const checkFunding = async () => {
+      if (action !== "fundEscrow") return;
+      const fresh = await this.fetch(escrow.address);
+      if (fresh.state !== 0)
+        throw new Error(
+          "This escrow is no longer unfunded. Refresh its on-chain state; do not repeat payment.",
+        );
+      assertFutureDeadline(fresh.deadline, await this.chainTime());
+    };
+    await checkFunding();
     const key = new PublicKey(escrow.address);
     const common = {
       config: this.configAddress,
@@ -427,7 +458,7 @@ export class EscrowClient {
         .accountsStrict(accounts)
         .instruction(),
     );
-    return this.send(tx);
+    return this.send(tx, [], checkFunding);
   }
   async pause(paused: boolean) {
     const ix = await this.program.methods
@@ -439,7 +470,11 @@ export class EscrowClient {
       .instruction();
     return this.send(new Transaction().add(ix));
   }
-  private async send(tx: Transaction, signers: Keypair[] = []) {
+  private async send(
+    tx: Transaction,
+    signers: Keypair[] = [],
+    beforeSubmit?: () => Promise<void>,
+  ) {
     const latest =
       await this.provider.connection.getLatestBlockhash("confirmed");
     tx.feePayer = this.provider.publicKey;
@@ -448,6 +483,8 @@ export class EscrowClient {
     const signed = await this.provider.wallet.signTransaction(tx);
     if (!signed.signature)
       throw new Error("Wallet did not supply the required signature.");
+    // Recheck after a potentially long wallet approval, before any submission.
+    await beforeSubmit?.();
     const signature = utils.bytes.bs58.encode(signed.signature);
     try {
       await this.provider.connection.sendRawTransaction(signed.serialize(), {
@@ -475,6 +512,19 @@ export class EscrowClient {
       }
       throw new Error("Confirmation timed out");
     } catch (error) {
+      if (
+        error instanceof SendTransactionError &&
+        error.message.startsWith("Simulation failed.")
+      ) {
+        const logs = error.transactionError.logs || [];
+        if (logs.some((line) => line.includes("Error Code: InvalidDeadline")))
+          throw new Error(
+            "RPC preflight rejected funding because the on-chain deadline expired. This submission was not broadcast by the RPC. Cancel the unfunded escrow and agree a new future deadline; do not retry funding this escrow.",
+          );
+        throw new Error(
+          `RPC preflight rejected this submission; it was not broadcast by the RPC. ${error.transactionError.message}`,
+        );
+      }
       throw new Error(
         `${error instanceof Error ? error.message : "Confirmation unavailable"}. Signed transaction ${signature} may have been submitted. Check the explorer before retrying; do not assume a transport error means failure.`,
       );
