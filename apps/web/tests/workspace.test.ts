@@ -23,3 +23,13 @@ test("wallet adapters normalize both Phantom and Solflare signatures and reject 
   assert.equal(normalizeSignature({ signature: proof }), proof);
   assert.throws(() => normalizeSignature(new Uint8Array(63)));
 });
+
+test("extension signatures from another JS realm are normalized to local bytes", async () => {
+  const { runInNewContext } = await import("node:vm");
+  const foreign = runInNewContext("new Uint8Array(64).fill(7)");
+  assert.equal(foreign instanceof Uint8Array, false);
+  const proof = normalizeSignature(foreign);
+  assert.equal(proof instanceof Uint8Array, true);
+  assert.deepEqual([...proof], Array(64).fill(7));
+  assert.throws(() => normalizeSignature(new Uint16Array(32) as never));
+});

@@ -14,6 +14,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: node --test scripts/verify-devnet.test.mjs scripts/ci-localnet-identity.test.mjs
       - run: npm run check
       - run: npx tsc --noEmit -p programs/trustlayer_escrow/tsconfig.json
       - name: Browser regression checks

@@ -14,6 +14,7 @@ import { useDapp } from "./DappProvider";
 import { backend } from "@/lib/supabase/client";
 import { availableWallets } from "@/lib/escrow";
 import { normalizeSignature } from "@/lib/workspace";
+import { signInWithWallet } from "@/lib/wallet-auth";
 export function AccountGate() {
   const { loading, authError } = useAccount();
   return (
@@ -107,24 +108,7 @@ export function AccountPage() {
       throw new Error(
         "Connect Phantom or Solflare with message-signing support first.",
       );
-    const signer = d.wallet;
-    const result = await backend().auth.signInWithWeb3({
-      chain: "solana",
-      wallet: {
-        publicKey: signer.publicKey!,
-        signMessage: async (bytes) =>
-          normalizeSignature(await signer.signMessage!(bytes, "utf8")),
-      },
-      statement:
-        "Sign in to Trustlayer. This signature creates an account session, not a payment.",
-      options: {
-        signInWithSolana: {
-          nonce: crypto.randomUUID().replaceAll("-", ""),
-          expirationTime: new Date(Date.now() + 300000).toISOString(),
-        },
-      },
-    });
-    if (result.error) throw result.error;
+    await signInWithWallet(backend(), d.wallet, window.location.href);
     setMessage(
       "Signed in securely. Verify your wallet below to receive private invitations.",
     );
@@ -192,9 +176,9 @@ export function AccountPage() {
         title={a.session ? "Account & identity" : "Welcome to your workspace."}
         description="A signed wallet session. Private agreements. No seed phrases or passwords to share."
       />
-      {error && (
+      {(error || d.error) && (
         <div role="alert" className="notice danger">
-          {error}
+          {error || d.error}
         </div>
       )}
       {message && (
