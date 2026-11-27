@@ -43,3 +43,20 @@ export function explorer(
 
   return `${base}?cluster=${cluster}`;
 }
+
+/** Fail closed; network identity comes from the RPC, never the wallet UI. */
+export function assertRpcCluster(
+  cluster: SolanaCluster,
+  genesis: string,
+): void {
+  if (genesis === SOLANA_GENESIS_HASHES[cluster]) return;
+  const observed =
+    Object.entries(SOLANA_GENESIS_HASHES).find(
+      ([, hash]) => hash === genesis,
+    )?.[0] || "an unrecognized network";
+  throw new Error(
+    `RPC network mismatch: this app expects ${cluster}, but its server RPC reports ${observed}. ` +
+      "Signing is disabled. The deployment operator must align SOLANA_RPC_URL with " +
+      "NEXT_PUBLIC_SOLANA_CLUSTER and rebuild/redeploy. Changing the wallet network alone will not fix this.",
+  );
+}

@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   getSolanaCluster,
+  assertRpcCluster,
   explorer,
   SOLANA_GENESIS_HASHES,
 } from "../lib/solana/cluster";
@@ -68,5 +69,23 @@ test("Solana cluster genesis hashes are complete and correct", () => {
   assert.equal(
     SOLANA_GENESIS_HASHES["mainnet-beta"],
     "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+  );
+});
+
+test("RPC network mismatch remains fail-closed with actionable public diagnostics", () => {
+  assert.doesNotThrow(() =>
+    assertRpcCluster("devnet", SOLANA_GENESIS_HASHES.devnet),
+  );
+  assert.throws(
+    () => assertRpcCluster("devnet", SOLANA_GENESIS_HASHES["mainnet-beta"]),
+    /expects devnet.*reports mainnet-beta/,
+  );
+  assert.throws(
+    () => assertRpcCluster("testnet", SOLANA_GENESIS_HASHES.devnet),
+    /expects testnet.*reports devnet/,
+  );
+  assert.throws(
+    () => assertRpcCluster("devnet", "unknown"),
+    /unrecognized network/,
   );
 });
