@@ -1,10 +1,20 @@
 // Read-only deployment verification. No signing keys, funding or configuration writes.
 import assert from "node:assert/strict";
+import { pathToFileURL } from "node:url";
 import { readFile } from "node:fs/promises";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { getMint, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import anchor from "@coral-xyz/anchor";
-const { Program, BorshAccountsCoder } = anchor;
+const { Program } = anchor;
+export function decodeConfig(idl, data, connection) {
+  // Program normalizes raw Anchor IDL account and field names to camelCase.
+  return new Program(idl, { connection }).coder.accounts.decode("config", data);
+}
+let stage = "initialization";
+function at(next) {
+  stage = next;
+  console.log(`Checking: ${stage}`);
+}
 const expected = {
   program: "7v6PxWejvNneG5TwZSntgj5ZjV6sgLSengjkVsct6V2G",
   programData: "8VsMXpACHJ7HGi4N6ZuxXGiEsZJ455L2StGT8m5bLnLX",
@@ -32,11 +42,13 @@ async function main() {
         fetch(url, { ...options, signal: AbortSignal.timeout(15000) }),
     },
   );
+  at("Devnet RPC genesis");
   assert.equal(
     await connection.getGenesisHash(),
     "EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG",
     "Devnet genesis",
   );
+  at("expected PDA derivation");
   const program = new PublicKey(expected.program);
   const loader = new PublicKey("BPFLoaderUpgradeab1e11111111111111111111111");
   const [config] = PublicKey.findProgramAddressSync(
@@ -53,11 +65,13 @@ async function main() {
     expected.programData,
     "ProgramData derivation",
   );
+  at("program, ProgramData and Config RPC lookup");
   const [p, d, c] = await connection.getMultipleAccountsInfo([
     program,
     programData,
     config,
   ]);
+  at("program ownership and authority checks");
   assert(
     p?.executable && p.owner.equals(loader),
     "Executable upgradeable program",
@@ -75,25 +89,31 @@ async function main() {
     expected.upgradeAuthority,
   );
   assert(c?.owner.equals(program), "Config owner");
+  at("published IDL lookup");
   const idl = await Program.fetchIdl(program, { connection });
   assert.equal(idl?.address, expected.program, "Published IDL identity");
+  at("local IDL file read");
   const local = JSON.parse(
     await readFile(
       process.argv[2] || "target/idl/trustlayer_escrow.json",
       "utf8",
     ),
   );
+  at("published/local IDL equality");
   assert.equal(
     canonical(idl),
     canonical(local),
     "Complete published/local IDL equality",
   );
-  const cfg = new BorshAccountsCoder(idl).decode("config", c.data);
+  at("Config decoding");
+  const cfg = decodeConfig(idl, c.data, connection);
+  at("Config values");
   assert.equal(cfg.usdcMint.toBase58(), expected.mint);
   assert.equal(cfg.feeRecipient.toBase58(), expected.treasury);
   assert.equal(cfg.arbitrationAuthority.toBase58(), expected.arbitrator);
   assert.equal(cfg.feeBps, 100);
   assert.equal(cfg.paused, false);
+  at("USDC mint lookup and decimals");
   const mint = await getMint(
     connection,
     new PublicKey(expected.mint),
@@ -116,12 +136,19 @@ async function main() {
     ),
   );
 }
-main().catch((error) => {
-  // Never print a credential-bearing RPC URL from a network exception.
-  console.error(
-    error?.code === "ERR_ASSERTION"
-      ? `Verification failed: ${error.message}`
-      : "Verification incomplete: RPC unavailable, missing local IDL, or account decoding failed. No readiness asserted.",
-  );
-  process.exitCode = 1;
-});
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
+  main().catch((error) => {
+    // Do not print exception messages/stacks: network errors can include credentials.
+    const kind =
+      error?.code === "ERR_ASSERTION"
+        ? "expectation mismatch"
+        : "operation failed";
+    console.error(
+      `Verification incomplete at ${stage}: ${kind}. No readiness asserted.`,
+    );
+    process.exitCode = 1;
+  });
+}
