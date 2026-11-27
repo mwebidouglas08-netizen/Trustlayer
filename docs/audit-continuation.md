@@ -81,3 +81,9 @@ CI also creates its disposable wallet at the path configured by Anchor.toml, rat
 The supplied database excerpt contains only Docker image-pull progress, not the terminal error. Its cause is still unknown. Startup output is now captured with pipefail preserved, a short tail and container/disk status are printed on failure, and failed startup output is retained as a seven-day CI artifact. This is for the disposable local CI stack; no hosted project credentials are injected. Database service health checks/tests were not bypassed.
 
 Validation of these workflow edits: YAML parsing, targeted toolchain/failure-propagation assertions, Prettier and git diff checks passed. Actual contract/database execution still requires the new CI result. This follow-up is not a claim of passing runtime tests or production readiness.
+
+## Confirmed database startup cause: leading UTF-8 BOM
+
+The complete supplied CI log shows all image downloads completed and PostgreSQL then rejected statement 0 of `20261125084842_trustlayer_initial.sql` with SQLSTATE 42601. Byte inspection confirmed a leading EF BB BF (UTF-8 BOM). The fix removes exactly those three bytes; all SQL statements and migration versions are unchanged. No hosted migration was rerun or reset.
+
+A dependency-free SQL encoding guard now runs before database container startup and in `npm run check`. It rejects BOMs, invalid UTF-8 and NUL bytes. Three guard tests pass; all 11 repository SQL files pass. A regression check against the Git version of the original migration fails as expected, and byte comparison verifies the fix changes nothing beyond the BOM. Docker/pgTAP execution is still unavailable locally; the next CI result must confirm startup and the subsequent migrations/tests. Download-progress output was not the cause of this demonstrated failure.

@@ -34,6 +34,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate SQL encoding before container startup
+        run: npm run test:sql:encoding
       - uses: supabase/setup-cli@v1
         with:
           version: 2.65.5

@@ -15,12 +15,13 @@
     "test": "npm run test -w apps/web",
     "typecheck": "npm run typecheck -w apps/web",
     "lint": "npm run lint -w apps/web",
-    "check": "npm run lint && npm run typecheck && npm test && npm run build",
+    "check": "npm run test:sql:encoding && npm run lint && npm run typecheck && npm test && npm run build",
     "test:e2e": "playwright test",
     "test:e2e:sandbox": "node scripts/browser-tests.mjs",
     "test:contract:types": "tsc --noEmit -p programs/trustlayer_escrow/tsconfig.json",
     "format": "prettier --write apps/web/app apps/web/components apps/web/lib apps/web/tests tests scripts docs programs/trustlayer_escrow/tests *.md *.json *.ts .github/workflows/*.yml",
-    "format:check": "prettier --check apps/web/app apps/web/components apps/web/lib apps/web/tests tests scripts docs programs/trustlayer_escrow/tests *.md *.json *.ts .github/workflows/*.yml"
+    "format:check": "prettier --check apps/web/app apps/web/components apps/web/lib apps/web/tests tests scripts docs programs/trustlayer_escrow/tests *.md *.json *.ts .github/workflows/*.yml",
+    "test:sql:encoding": "node --test scripts/check-sql-encoding.test.mjs && node scripts/check-sql-encoding.mjs"
   },
   "devDependencies": {
     "@coral-xyz/anchor": "0.30.1",
