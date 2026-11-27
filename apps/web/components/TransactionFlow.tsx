@@ -1,4 +1,11 @@
 "use client";
+import type { Agreement } from "@/lib/workspace";
+import {
+  acceptedEscrowTerms,
+  localDeadlineInput,
+} from "@/lib/accepted-agreement";
+import { backend } from "@/lib/supabase/client";
+import { AGREEMENT_FIELDS } from "@/lib/workspace";
 import { FileExport } from "./FileExport";
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useState } from "react";
@@ -56,18 +63,27 @@ function useTransactionSyncRetry() {
   }, [accessToken, notify]);
 }
 
-export function NewTransaction() {
+export function NewTransaction({
+  acceptedAgreement,
+}: { acceptedAgreement?: Agreement } = {}) {
+  const { session } = useAccount();
+  const accepted =
+    acceptedAgreement && session
+      ? acceptedEscrowTerms(acceptedAgreement, session.user.id)
+      : null;
   const d = useDapp();
   useTransactionSyncRetry();
 
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(acceptedAgreement?.title || "");
   const [transactionType, setTransactionType] = useState<"goods" | "service">(
     "service",
   );
-  const [seller, setSeller] = useState("");
-  const [amount, setAmount] = useState("");
-  const [deadline, setDeadline] = useState("");
-  const [terms, setTerms] = useState("");
+  const [seller, setSeller] = useState(accepted?.seller || "");
+  const [amount, setAmount] = useState(accepted?.amount || "");
+  const [deadline, setDeadline] = useState(
+    accepted ? localDeadlineInput(accepted.deadline) : "",
+  );
+  const [terms, setTerms] = useState(accepted?.terms || "");
   const [review, setReview] = useState(false);
   const [agreementSaved, setAgreementSaved] = useState(false);
   const [error, setError] = useState("");
@@ -94,16 +110,68 @@ export function NewTransaction() {
   }
   async function create() {
     if (!d.client) return;
-    const result = await d.run(
-      () =>
-        d.client!.create(
-          seller.trim(),
-          amount,
-          Math.floor(Date.parse(deadline) / 1000),
-          terms,
-        ),
-      "Escrow created and confirmed. It is not funded yet.",
-    );
+    const result = await d.run(async () => {
+      if (acceptedAgreement) {
+        const { data, error } = await backend()
+          .from("agreements")
+          .select(AGREEMENT_FIELDS)
+          .eq("id", acceptedAgreement.id)
+          .single();
+        if (error || !session)
+          throw new Error("Sign in again and reload the accepted agreement.");
+        const fresh = acceptedEscrowTerms(data, session.user.id);
+        const wallet = await backend()
+          .from("wallets")
+          .select("public_key")
+          .eq("user_id", session.user.id)
+          .eq("public_key", d.address || "")
+          .not("verified_at", "is", null)
+          .maybeSingle();
+        if (wallet.error || !wallet.data)
+          throw new Error(
+            "Verify the connected buyer wallet in Profile before creating escrow.",
+          );
+        const digest = Array.from(
+          new Uint8Array(
+            await crypto.subtle.digest(
+              "SHA-256",
+              new TextEncoder().encode(fresh.canonical),
+            ),
+          ),
+        )
+          .map((v) => v.toString(16).padStart(2, "0"))
+          .join("");
+        const existing = (await d.client!.list()).find(
+          (e) =>
+            e.buyer === d.address &&
+            e.seller === fresh.seller &&
+            e.hash === digest,
+        );
+        if (existing)
+          throw new Error(
+            `A matching escrow already exists: ${existing.address}. Return to the accepted agreement to open it instead of creating another.`,
+          );
+
+        if (
+          fresh.canonical !==
+          agreementText(
+            seller.trim(),
+            parseAmount(amount).toString(),
+            Math.floor(Date.parse(deadline) / 1000),
+            terms,
+          )
+        )
+          throw new Error(
+            "The form does not match the accepted terms. Reload the agreement; do not create altered terms.",
+          );
+      }
+      return d.client!.create(
+        seller.trim(),
+        amount,
+        Math.floor(Date.parse(deadline) / 1000),
+        terms,
+      );
+    }, "Escrow created and confirmed. It is not funded yet.");
     if (result) {
       setResult(result);
 
@@ -183,6 +251,12 @@ export function NewTransaction() {
         title="Create a protected transaction"
         description="Set the terms now. Approve the USDC deposit separately in your wallet."
       />
+      {acceptedAgreement && (
+        <div className="notice">
+          Accepted proposal terms are locked. Create the escrow first, then
+          approve funding separately. No USDC moves on acceptance or creation.
+        </div>
+      )}
       {!d.client ? (
         <section className="panel">
           <ConnectionGate />
@@ -205,6 +279,7 @@ export function NewTransaction() {
                   <input
                     required
                     maxLength={120}
+                    readOnly={!!acceptedAgreement}
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="What is this agreement for?"
@@ -226,6 +301,7 @@ export function NewTransaction() {
                   Seller wallet address
                   <input
                     required
+                    readOnly={!!acceptedAgreement}
                     value={seller}
                     onChange={(e) => setSeller(e.target.value)}
                     placeholder="Solana public key"
@@ -242,6 +318,7 @@ export function NewTransaction() {
                     <input
                       required
                       inputMode="decimal"
+                      readOnly={!!acceptedAgreement}
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
                       placeholder="0.00"
@@ -252,6 +329,7 @@ export function NewTransaction() {
                     <input
                       required
                       type="datetime-local"
+                      readOnly={!!acceptedAgreement}
                       value={deadline}
                       onChange={(e) => setDeadline(e.target.value)}
                     />
@@ -263,6 +341,7 @@ export function NewTransaction() {
                     required
                     maxLength={10000}
                     rows={6}
+                    readOnly={!!acceptedAgreement}
                     value={terms}
                     onChange={(e) => setTerms(e.target.value)}
                     placeholder="Describe what will be delivered, when, and what counts as successful delivery. Do not include private personal information."
@@ -343,7 +422,9 @@ export function NewTransaction() {
                 <p className="muted">
                   Creation costs SOL for network fees and account rent. It does
                   not move USDC. The seller can escalate to arbitration after
-                  the deadline; refunds are not automatic.
+                  the deadline; refunds are not automatic. Funding must also
+                  complete before this deadline, measured by Solana’s clock.
+                  Allow enough time for wallet approval.
                 </p>
                 <div className="button-row">
                   <button
@@ -433,6 +514,7 @@ export function TransactionDetail({ id }: { id: string }) {
   const d = useDapp();
   useTransactionSyncRetry();
 
+  const [chainTime, setChainTime] = useState<number | null>(null);
   const [row, setRow] = useState<Escrow | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -445,7 +527,12 @@ export function TransactionDetail({ id }: { id: string }) {
     setLoading(true);
     setError("");
     try {
-      setRow(await d.client.fetch(id));
+      const [fresh, time] = await Promise.all([
+        d.client.fetch(id),
+        d.client.chainTime(),
+      ]);
+      setRow(fresh);
+      setChainTime(time);
     } catch {
       setRow(null);
       setError(
@@ -520,7 +607,7 @@ export function TransactionDetail({ id }: { id: string }) {
   const actions = actionsFor(
     row.state,
     role,
-    Date.now() >= row.deadline * 1000,
+    chainTime !== null && chainTime >= row.deadline,
     d.client.config.paused,
   );
   async function execute() {
